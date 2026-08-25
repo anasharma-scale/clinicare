@@ -1,0 +1,135 @@
+# Canonical task.toml for a MIMIC healthcare task. Copy this, change [task].name and
+# [task].description, and write instruction.md. Everything else is identical across tasks.
+#
+# CREDENTIAL ISOLATION (sidecar model — the only mode). The agent container holds NO data
+# credentials and cannot reach the data store, the instance-metadata endpoint, or the open web.
+# It reaches the MIMIC tools ONLY through a
+# stdio MCP shim (`mimic_tools.mcp_server`, proxy mode) that forwards to a credentialed
+# `mimic-tools` sidecar — the one process with data access. build_tasks.py writes the
+# sidecar as this task's environment/docker-compose.yaml (Harbor auto-merges it) and stages the
+# policy corpus into the sidecar. See packages/mimic_tools/SIDECAR.md.
+schema_version = "1.1"
+
+[task]
+name = "mimic/<task-id>"
+description = "<one-line task summary>"
+keywords = ["mimic", "healthcare", "deep-research"]
+
+[environment]
+# Prebuilt MIMIC env image (python + mimic_tools[mcp,api] + the stdio MCP server + the analytics
+# toolkit + the baked claude-code/codex CLIs), built from _template/environment/Dockerfile via
+# `bash scripts/build_image.sh`. Referenced as a prebuilt image (NOT via a per-task `FROM`
+# Dockerfile — that build context can't see the mimic_tools package the image COPYs). The local
+# daemon resolves it by ref; a remote backend needs it pushed to a registry both can reach
+# (`build_image.sh --push`). The SAME image runs the sidecar (differs only by command + env).
+#
+# The tag below is a PLACEHOLDER: build_tasks.py replaces it with the ref resolved by
+# benchmark/scripts/env_image.py — a content hash of the Dockerfile + mimic_tools (or $MIMIC_ENV_TAG
+# pin). So DO NOT hardcode a version here: keeping it out of the committed template is what stops
+# the tag from merge-conflicting across branches and from drifting out of sync with what was
+# actually pushed. To change the image: edit the Dockerfile / mimic_tools, `bash
+# scripts/build_image.sh` (builds the new content tag), then rebuild tasks. To reproduce an
+# old run, pin: `MIMIC_ENV_TAG=0.1.0 build_tasks.py …`.
+docker_image = "<env-image-ref>"
+os = "linux"
+cpus = 2
+memory_mb = 8192
+storage_mb = 20480
+# BASELINE network = public so Harbor can install the agent harness at SETUP: gemini-cli still
+# installs at runtime (nvm/npm, needs the internet); claude-code + codex are baked into the image.
+# The agent is not reasoning yet at setup, so an open baseline is safe here. Agent EXECUTION is
+# locked down by the [agent] override below.
+network_mode = "public"
+
+[environment.env]
+# The agent shim runs in PROXY mode: it forwards every tool call to the sidecar and holds no creds.
+# MIMIC_TOOLS_URL + MIMIC_TOOLS_API_KEY point it at the sidecar. Delivery differs by backend:
+#   - docker (compose): Harbor routes [environment.env] ONLY to the docker-compose CLI for
+#     compose-file interpolation — it does NOT reach the container, and Harbor does not interpolate
+#     ${VAR} in mcp_servers.args. So the sidecar compose overlay injects these into the agent
+#     container's env (main.environment), where the shim inherits them. The values here feed that
+#     overlay's ${VAR} interpolation.
+#   - modal (non-compose): [environment.env] DOES reach the container, so the shim reads them here.
+# Default URL is the docker compose service name; a modal run exports MIMIC_TOOLS_URL=<hosted URL>.
+MIMIC_TOOLS_URL = "${MIMIC_TOOLS_URL:-http://mimic-tools.internal:8799}"
+MIMIC_TOOLS_API_KEY = "${MIMIC_API_SECRET:-}"
+# Advertise the policy file-search tools (list_policy_docs / search_policy / read_policy) in the
+# shim's tool LIST so it matches the sidecar's surface; the corpus itself lives only in the sidecar.
+# "1" = policy-ON; build_tasks.py --no-policy flips this to "0" (and, via compose interpolation, the
+# sidecar + the main-overlay injection follow it) for the policy-off ablation.
+MIMIC_POLICY_TOOLS = "1"
+# MCP handshake/tool timeouts (ms), read by claude-code. MCP_TIMEOUT = startup handshake (fast in
+# proxy mode). MCP_TOOL_TIMEOUT = per tool call — 600s so a slow note-module read (the sidecar can
+# read a large note table) completes instead of timing out into a false "lack of data"; this
+# matches gemini's 600s default and the shim's HTTP timeout. On docker these are injected into the
+# container by the sidecar compose overlay (task [environment.env] doesn't reach the container under
+# compose); on modal they apply directly. codex's equivalent is MCP_STARTUP_TIMEOUT_SEC, exported in
+# the run recipe (the codex adapter reads it). Lowering `-n` also eases handshake contention.
+MCP_TIMEOUT = "120000"
+MCP_TOOL_TIMEOUT = "600000"
+
+# NO JUDGE_* vars: the verifier is DETERMINISTIC-ONLY.
+# It scores the verdict match, cited-ID grounding, and the deterministic policy items — no LLM, so
+# no creds, no egress, no per-trial judge cost, and no pass that silently skips when a shell var is
+# unset, which would drop the score for a whole sweep without failing anything.
+#
+# The LLM-judged metrics (process rubric, policy citation support) are scored afterwards from the
+# persisted artifacts:
+#   python benchmark/eval/grade.py jobs/<job>
+# It defaults to judge model `openai/gpt-5.5` and takes JUDGE_BASE_URL / JUDGE_API_KEY from the
+# shell you run it in.
+#
+# process_pct IS NOISY PER TRIAL. Re-grading the same job twice with the same judge does not
+# reproduce per-trial scores. Read it as an aggregate over a job; a single trial's process score
+# does not mean much on its own.
+
+# Stdio MCP server: the proxy shim. Bare command — it inherits MIMIC_TOOLS_URL + MIMIC_TOOLS_API_KEY
+# from the container env (injected by the sidecar compose overlay's main.environment on docker; from
+# [environment.env] on modal). Do NOT inline ${VAR} here: Harbor passes these args verbatim (no
+# interpolation), so the values must arrive as real container env. Credential fail-fast lives in the
+# sidecar (mimic_tools.serve preflights the dataset at startup and exits non-zero if it cannot
+# read it → `docker compose up --wait` fails the trial), so no agent-side healthcheck is needed.
+[[environment.mcp_servers]]
+name = "mimic"
+transport = "stdio"
+command = "python"
+args = ["-m", "mimic_tools.mcp_server"]
+
+[agent]
+timeout_sec = 5400
+# Run the agent as the non-root `agent` user baked into the image (environment/Dockerfile), not
+# as uid 0. This line is what makes that effective for Harbor, not just for a bare `docker run`:
+# Harbor reads it into `environment.default_user`, which is both the exec user AND the chown
+# target for every file it uploads into the container. Omit it and uploaded auth creds stay
+# root-owned while the agent runs unprivileged. Must match the USER in the Dockerfile.
+user = "agent"
+# EXECUTION lockdown (this is when the agent reasons). Deny-by-default egress via Harbor's
+# egress-control sidecar (nftables + a GOST allowlist proxy): it force-routes ALL of the agent's
+# outbound TCP, so it blocks the data store, IMDS (169.254.169.254), and the open web, permitting ONLY the
+# model proxy and the data sidecar. This is the load-bearing isolation step — without it a
+# shell-capable agent could curl IMDS for host credentials or connect straight to the data store.
+# MODEL ENDPOINTS ARE INJECTED AT BUILD TIME. Harbor does not ${VAR}-interpolate allowed_hosts, so
+# build_tasks.py substitutes the placeholder below: the three vendor APIs (or $CLINICARE_ALLOWED_HOSTS
+# if set), plus the host of any *_BASE_URL that is exported, plus the sidecar alias. Because it is
+# frozen here at build time, a gateway exported AFTER a build is not reachable by those tasks —
+# rebuild. run_sweep.py preflights exactly that drift.
+#
+# EVERY ENTRY MUST BE DOTTED. Some Harbor backends validate this list server-side and reject a
+# bare label ("Invalid domain: mimic-tools"), which kills every trial before the agent starts.
+# The docker sidecar is therefore reached through its `mimic-tools.internal` compose network
+# alias rather than its bare service name; docker's embedded DNS resolves the alias, and the
+# GOST allowlist matches the sniffed Host header against these lines verbatim, so the dialed
+# name and this entry must agree. Keep in lockstep with the alias + MIMIC_TOOLS_URL default in
+# environment/sidecar.compose.yml.
+network_mode  = "allowlist"
+allowed_hosts = ["<allowed-hosts>"]
+
+[verifier]
+# 1800, not 600. At 600 the verifier discards finished work: a trial that wrote a complete
+# report.md is lost to `VerifierTimeoutError` and drops out of `n` rather than being scored,
+# which silently biases the denominator -- after the agent has already paid its cost.
+# The verifier runs three LLM judge passes (outcome, process rubric, policy grounding) over a
+# report plus trajectory, each with retries, so 600 s is simply under-budgeted for a long
+# trajectory rather than a symptom of a hang. The agent budget above is 5400 s; a verifier
+# ceiling at a third of that leaves headroom without letting a genuinely stuck judge run free.
+timeout_sec = 1800

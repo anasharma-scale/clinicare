@@ -1,0 +1,57 @@
+# Process rubric for scenario-01 (advanced-imaging), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Verified that the patient was on ICU during the period of their in-patient stay"
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Verified the dates and times that the patient was on ICU"
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Determined whether or not the patient had cross-sectional imaging (CT, MRI or cross-sectional IR) during their stay on ICU"
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Confirmed whether or not the cross-sectional imaging actually took place by cross-referencing the radiology report"
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Confirmed whether or not that the cross-sectional imaging and the radiology report coincided with the patient's ICU stay times."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Used procedures_icd as the imaging source (severe undercount)."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Counted an order outside the stay window as in-window."
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Counted an order from a different ICU stay as in-window."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Treated a radiology order as a performed study without acknowledging order ≠ study."
+
+[[rubric]]
+id = "N5"
+weight = "-2"
+title = "Asserted Yes/No without verifying which ICU stay the imaging is attributable to, where the admission has more than one."

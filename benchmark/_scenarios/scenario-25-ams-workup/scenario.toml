@@ -1,0 +1,43 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "ams-workup"
+description = "Altered mental status workup completeness"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For subject_id={subject_id} admitted with altered mental status (hadm_id={hadm_id}), was the workup complete against the standard AMS battery — every indicated element performed? An element is faulted only if it was indicated by the presentation; an element appropriately deemed not indicated still counts as complete. For each element state completed / missed / not indicated with the supporting data.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Against the standard AMS battery (glucose, BMP incl. Na/Ca, CBC, LFTs + ammonia if liver disease, TSH, UA + urine culture, blood cultures if febrile, toxicology, blood gas, EKG, non-contrast head CT, LP if CNS infection suspected, EEG if seizure suspected), was every INDICATED element performed?'''
+
+inclusion_criteria = [
+  "Every element indicated by the presentation (such as LP if CNS infection suspected) was performed (or appropriately deemed not indicated), with supporting data for each.",
+]  # → YES
+
+exclusion_criteria = [
+  "≥1 INDICATED element was not performed (e.g. no ammonia in suspected hepatic encephalopathy; no head CT after a fall; no LP in fever + AMS).",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "Workup data are incomplete in the pulled streams, so completion of elements can't be confirmed either way.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "Whether an element was INDICATED is genuinely ambiguous from the presentation — escalate that element rather than faulting it.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Per-element presence: labs (glucose, Na, Ca, CBC, LFTs, ammonia, TSH), UA/cultures, toxicology, blood gas; EKG; head CT (radiology); LP (CSF micro); EEG; with indication logic from the presentation.",
+]
+
+grounding_requirements = '''
+Required sources: hosp/labevents (glucose 50931, Na 50983, Ca 50893, CBC 51301, LFTs, ammonia 50866, TSH, tox 50975/50980/50801); microbiologyevents (UA/urine, blood, CSF cultures); MIMIC-IV-Note radiology (head CT) + discharge; poe (EEG/LP orders).
+Required fields: per-element lab presence + value; culture types; head-CT report; LP/CSF; EEG; presentation-driven indication flags.
+Required timing logic: workup elements during the admission; febrile-status gating for cultures; suspicion-gating for LP/EEG.
+Authoritative public sources
+- ACEP Clinical Policy on the adult psychiatric/altered-mental-status patient;
+- standard internal-medicine AMS workup references.
+'''

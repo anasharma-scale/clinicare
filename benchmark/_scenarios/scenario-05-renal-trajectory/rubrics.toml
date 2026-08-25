@@ -1,0 +1,67 @@
+# Process rubric for scenario-05 (renal-trajectory), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Computed per-admission creatinine baselines from labevents (50912) across all admissions."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Ordered admissions chronologically and compared baselines across the course."
+
+[[rubric]]
+id = "D3"
+weight = "+1"
+title = "Identified renally cleared medication changes across admissions."
+
+[[rubric]]
+id = "D4"
+weight = "+1"
+title = "Distinguished a discrete reversible AKI from a true trajectory change."
+
+[[rubric]]
+id = "D5"
+weight = "+1"
+title = "Surfaced lab-vs-ICD discordance (coded CKD vs the measured trajectory)."
+
+[[rubric]]
+id = "D6"
+weight = "+2"
+title = "Recognized the muscle-mass/creatinine confound — that flat creatinine can mask GFR decline in frail/long-course patients — and escalated rather than calling 'No' when it can't be resolved."
+
+[[rubric]]
+id = "D7"
+weight = "+1"
+title = "Cited specific admissions and data points for the inflection points."
+
+[[rubric]]
+id = "D8"
+weight = "+2"
+title = "Recorded patient sex as a required input for the eGFR equation (2021 CKD-EPI / MDRD / Cockcroft-Gault)."
+
+[[rubric]]
+id = "D9"
+weight = "+2"
+title = "Recorded weight at each admission"
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Concluded 'No / stable' from creatinine alone in an older/frail/long-course patient without accounting for the muscle-mass confound."
+
+[[rubric]]
+id = "N2"
+weight = "-1"
+title = "Called a recovered transient AKI a 'worsening trajectory'."
+
+[[rubric]]
+id = "N3"
+weight = "-1"
+title = "Asserted a trajectory from fewer than 2 admissions or sparse creatinine."

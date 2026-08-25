@@ -1,0 +1,47 @@
+# Process rubric for scenario-24 (frequent-admitter), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Enumerated every admission in the window (date, reason, length of stay)."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Determined whether OR not a recurring diagnosis or diagnoses was recorded during patient's readmissions OR that the available evidence does not allow that determination to be made"
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Determined whether there was a specific intervenable driver of readmission, OR that the available evidence does not allow that determination."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Determined whether the recurring diagnoses share a common theme."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Asserted an intervenable driver not actually documented in the notes (fabrication)."
+
+[[rubric]]
+id = "N2"
+weight = "-1"
+title = "Counted clinically unrelated admissions as a coherent pattern."
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Read intervenable drivers (adherence, substance, housing, mental health, follow-up, caregiver) from diagnoses_icd codes instead of MIMIC-IV-Note discharge note spans."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Asserted a pattern without verifying that the discharge notes for every admission in the window were retrieved."

@@ -1,0 +1,40 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "he-precipitant"
+description = "Hepatic encephalopathy precipitant identification"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For cirrhotic patient subject_id={subject_id} admitted with hepatic encephalopathy (hadm_id={hadm_id}), is an identifiable precipitant present and worked up? Work through the standard candidates, citing evidence for each; only candidates clinically indicated by the presentation need to be worked up (a candidate reasonably not indicated does not count against completeness).
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Among the standard HE precipitants (infection/SBP, GI bleed, electrolyte derangement, constipation/lactulose non-adherence, AKI/dehydration, sedating meds, dietary protein), is ≥1 supported by the data, with the key candidates adequately worked up?'''
+
+inclusion_criteria = [
+  "≥1 precipitant is supported by evidence (positive SBP on paracentesis, melena/Hgb drop, hyponatremia, documented lactulose non-adherence, AKI, pneumonia, UTI, EtOH intoxication, recreational drug use), AND the major candidates were evaluated (paracentesis, cultures, electrolytes, AKI check, EtOH levels, urine/serum drug screen).",
+]  # → YES
+
+exclusion_criteria = [
+  "The clinically-indicated candidates were adequately worked up — including any candidate reasonably not indicated by the presentation, or one omitted for a documented clinically-appropriate reason — and none is supported (no precipitant identified — a valid but uncommon outcome).",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "A clinically-indicated candidate for the active HE presentation was not (and cannot be) assessed — e.g. ascites + fever but no diagnostic paracentesis / ascitic-fluid result available — so that candidate cannot be ruled in or out and the precipitant genuinely cannot be determined. Applies ONLY to candidates the presentation clinically indicates; a non-indicated candidate, or one omitted for a documented clinically-appropriate reason, does NOT trigger this.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = []  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Cultures + diagnostic paracentesis (ascitic-fluid cell count/culture for SBP); CBC/Hgb trend (GI bleed); Na/K/HCO3 (electrolytes); creatinine (AKI); lactulose administration/adherence; sedating-med exposure; note documentation. If obtained: U/A +/- urine culture; sputum culture. EtOH level. If obtained: urine drug screen +/- serum drug screen.",
+]
+
+grounding_requirements = '''
+Required sources: hosp/microbiologyevents (ascitic fluid, cultures); MIMIC-IV-Note discharge + radiology; hosp/labevents (Na 50983, K 50971, ammonia 50866, Hgb 51222, creatinine 50912); prescriptions/emar (lactulose, sedatives); diagnoses_icd.
+Required fields: ascitic-fluid cell count/culture; Hgb trend; electrolytes; creatinine; lactulose orders/administration; sedating-med exposure; U/A +/- urine culture; sputum culture; urine drug screen +/- serum drug screen.
+Required timing logic: precipitant evidence around the HE presentation; trend electrolytes/Hgb/creatinine relative to admission.
+Authoritative public sources
+- AASLD/EASL Practice Guideline: Hepatic Encephalopathy in Chronic Liver Disease (Vilstrup et al., Hepatology 2014).
+'''

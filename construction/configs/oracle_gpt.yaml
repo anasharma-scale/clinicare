@@ -1,0 +1,59 @@
+# Saved harbor run config: GPT-5.5 (codex) oracle over the MIMIC healthcare answer tasks.
+# Build, export and the backend/allowlist rules are in the oracle_opus.yaml header.
+#
+# LAUNCH
+#   MCP_STARTUP_TIMEOUT_SEC=600 \
+#   uv run harbor run -c construction/configs/oracle_gpt.yaml -e docker \
+#       --extra-docker-compose benchmark/tasks_answer/_sidecar.compose.yml \
+#       --ae "OPENAI_API_KEY=$OPENAI_API_KEY" \
+#       --job-name full_answer_gpt_$(date +%Y%m%d_%H%M%S) --yes
+#
+#   MCP_STARTUP_TIMEOUT_SEC   codex reads it for the slow MIMIC MCP handshake
+#
+# import_path: CodexMcpFixed is the repo-local codex adapter and CANNOT be swapped for stock codex.
+# It fixes MCP registration (command/args as separate config.toml keys) — without it codex starts
+# with no MIMIC tools — and carries the two opt-in gateway workarounds below.
+#
+# ── Gateway-only, both OFF by default ────────────────────────────────────────────────────────
+# Against a vendor endpoint, skip this block. If you route through a gateway, add
+# `--ae "OPENAI_BASE_URL=$OPENAI_BASE_URL"` (must end in /v1) and check whether either symptom
+# applies; each flag targets one, and where both are present NEITHER works alone.
+#
+# CODEX_HTTP_ONLY=1 — some gateway edges return a bodiless 403 to the websocket UPGRADE on
+#   /v1/responses while plain HTTP POST to the same route returns 200. codex retries then exits,
+#   killing the trial before its first tool call. This writes a custom model_provider with
+#   `supports_websockets = false` into $CODEX_HOME/config.toml. It raises if OPENAI_BASE_URL is
+#   unset rather than silently falling through to api.openai.com.
+#
+# CODEX_PIN_DEPLOYMENT=<prefix> — codex replays encrypted reasoning state each turn, and a gateway
+#   that load-balances a BARE alias across deployments with different upstream keys sends turn 2
+#   elsewhere, so the blob will not decrypt (`invalid_encrypted_content`). Fatal on the second
+#   model request, yet it still writes a score-0.0 result, so it masquerades as a real one. Pinning
+#   addresses a single-deployment group instead; use whatever prefix your gateway exposes. Leave
+#   model_name the bare alias below — the adapter prefixes it at run time, and hardcoding it here
+#   would let harbor's Codex.run() collapse it back to the load-balanced alias.
+#
+# DEAD ENDS, do not retry: `--ak features.…=false` (harbor silently drops keys not declared in
+# CLI_FLAGS), and a `[features]` table in config.toml (written and ignored — that is a feature
+# name, not the transport switch). Pinning the codex CLI version is also not it: the same version
+# passes or fails depending on the gateway, so the CLI is not the variable.
+#
+# Secrets stay on the CLI via --ae, never in this file.
+job_name: full_answer_gpt
+n_attempts: 1
+n_concurrent_trials: 20
+agents:
+  - import_path: clinicare_core.agents.codex_mcp_fix:CodexMcpFixed
+    model_name: openai/gpt-5.5
+    kwargs:
+      # Closed-book. This one is not optional: web_search is a Responses API tool that runs on
+      # OpenAI's own infrastructure, so the sandbox egress allowlist CANNOT block it — leaving it
+      # on lets the model answer from outside the record. codex CLI: -c web_search=disabled.
+      web_search: disabled
+datasets:
+  - path: benchmark/tasks_answer
+artifacts:
+  - source: /workspace/report.md
+    destination: verifier/report.md
+verifier:
+  disable: true

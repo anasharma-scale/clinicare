@@ -1,0 +1,52 @@
+# Process rubric for scenario-14 (overdose-disposition), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Confirmed an opioid overdose from naloxone administration + opioid-poisoning ED code (T40.x / 965.0x), not chief complaint (CC) alone."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Assessed acute management (naloxone dosing, observation, disposition)."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Searched for ≥1 documented post-overdose intervention (MOUD — any of methadone, buprenorphine or naltrexone; take-home naloxone; addiction/SW)."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Escalated the post-overdose-intervention sub-point (rather than auto-calling No) when relevant consult/discharge note streams were not retrieved."
+
+[[rubric]]
+id = "D5"
+weight = "+1"
+title = "Noted the prior-overdose pattern as risk context."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Concluded a care gap (No) when interventions could be in unpulled notes (should escalate)."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Classified a non-opioid presentation as opioid overdose from chief complaint alone."
+
+[[rubric]]
+id = "N3"
+weight = "-1"
+title = "Counted naloxone continuation as a post-overdose MOUD intervention."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Counted an opioid-use-disorder or drug-counseling code (F11.2x, Z71.51) as evidence of a post-overdose intervention instead of the intervention record."

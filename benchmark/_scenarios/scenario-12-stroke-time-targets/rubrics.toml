@@ -1,0 +1,47 @@
+# Process rubric for scenario-12 (stroke-time-targets), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Established patient's admission time to hospital from edstays.intime."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Determined that patient was eligible for thrombolysis (window, contraindications) OR there was a documented and clinically appropriate reason for not offering patient thrombolysis."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Determined whether door-to-needle administration time fell within the thrombolysis target OR there was a documented and clinically appropriate reason for failure to meet that target."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Determined that patient's LVO status justified thrombectomy OR that there was a documented clinically appropriate reason for not offering thrombectomy (patient refusal, size of infarction, or contraindication)."
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Determined whether door-to-puncture time fell within the thrombectomy target OR there was a documented and clinically appropriate reason for failure to meet that target (including that the patient did not have LVO)."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Computed door-to-needle from lytic ORDER time instead of administration time."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Faulted appropriate non-treatment that had a documented contraindication."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Established that lysis or thrombectomy occurred from procedures_icd (date-only, no time) instead of the administration record."

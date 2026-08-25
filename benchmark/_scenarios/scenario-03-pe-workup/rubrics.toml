@@ -1,0 +1,87 @@
+# Process rubric for scenario-03 (pe-workup), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Determined whether PE was considered (Wells/Revised Geneva pathway, radiology indication, A&P, course)."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Inventoried the actual workup (risk-pathway, D-dimer, CTPA/contrast CT, V/Q, LE Doppler)."
+
+[[rubric]]
+id = "D3"
+weight = "+1"
+title = "Distinguished prophylactic VTE prophylaxis from therapeutic/empiric anticoagulation by drug name, dose, and route."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Cited the documented conclusion, including the load-bearing negative."
+
+[[rubric]]
+id = "D5"
+weight = "+1"
+title = "Noted the absence (or presence) of a PE/DVT diagnosis code in diagnoses_icd.csv.gz as a corroborating signal."
+
+[[rubric]]
+id = "D6"
+weight = "+1"
+title = "Noted a present treatment modality (therapeutic anticoag, thrombolysis, IVC filter) as a corroborating positive."
+
+[[rubric]]
+id = "D7"
+weight = "+1"
+title = "Abstained/flagged where the record is silent on a key point."
+
+[[rubric]]
+id = "D9"
+weight = "+1"
+title = "Recognized an indicated test/treatment may be absent for a documented reason (refusal, contraindication, financial, supervening emergency)."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Misread prophylactic SC heparin as treatment for a suspected/confirmed PE."
+
+[[rubric]]
+id = "N2"
+weight = "-1"
+title = "Asserted a Wells/PERC score or risk category was documented when it was not — including treating a laboratory's standing interpretive comment on a D-dimer result as documentation that an algorithm was applied to this patient."
+
+[[rubric]]
+id = "N3"
+weight = "-1"
+title = "Assumed further PE workup was mandated solely by a raised D-dimer."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Assumed the absence of therapeutic anticoagulation proves PE was ruled out."
+
+[[rubric]]
+id = "N5"
+weight = "-1"
+title = "Assumed therapeutic anticoagulation proves PE was formally diagnosed."
+
+[[rubric]]
+id = "N6"
+weight = "-2"
+title = "Resolved the pathway question without a documented pretest-probability assessment — either by assigning a risk category (low/intermediate/high) the clinician narrative does not record, or by reading adequacy off the imaging result (a CTPA or V/Q returned a definitive answer, therefore the workup was adequate) — instead of treating the question as unresolved."
+
+[[rubric]]
+id = "N7"
+weight = "-2"
+title = "Counted PE as having been considered on the strength of an incidental mention — e.g. named in a radiology report's differential — without evidence it was pursued as a diagnostic question."
+
+[[rubric]]
+id = "N8"
+weight = "-2"
+title = "Rested the verdict on the absence of a formal risk score in a patient in whom PE was NOT pursued with dedicated diagnostic testing. The two entry paths are alternative, not cumulative: no formal score is owed where testing was not pursued, so its absence cannot itself carry a No or an Indeterminate."

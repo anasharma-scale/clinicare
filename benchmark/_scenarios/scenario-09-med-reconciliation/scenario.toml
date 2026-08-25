@@ -1,0 +1,44 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "med-reconciliation"
+description = "Medication reconciliation discrepancy"
+params = ["subject_id", "hadm_id", "stay_id"]
+prompt = """
+For admission hadm_id={hadm_id} (subject_id={subject_id}, ED stay_id={stay_id}), reconcile the discharge medication list against home meds at arrival and the meds administered in the last 24 h. Are there clinically significant reconciliation discrepancies? A clinically significant (high-significance) discrepancy is an unintended one with no documented rationale: omission of a chronic med, a held-and-not-restarted home med, a missing duration on a time-limited course, or an undocumented dose/frequency/route change. List each discrepancy with its type and significance.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Are there ≥1 clinically significant medication-reconciliation discrepancies across home meds (medrecon), inpatient orders/administration, and the discharge list — distinguishing a documented intentional change from an unintended omission?'''
+
+inclusion_criteria = [
+  "≥1 high-significance UNINTENDED discrepancy: omission of a chronic med, a held-and-not-restarted home med, a medication that is supposed to have a time-limited course but the active orders show a missing duration, or an undocumented dose/frequency/route change — where no deliberate clinical rationale is documented.",
+]  # → YES
+
+exclusion_criteria = [
+  "All three sources reconcile.",
+  "Every difference is trivial or a documented intentional change.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "No ED encounter (no medrecon home list) or no structured discharge list, so reconciliation cannot be performed.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "A difference exists but intent (deliberate change vs unintended omission) cannot be determined from the record — escalate that item rather than calling it a discrepancy.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Home meds at ED arrival (MIMIC-IV-ED medrecon); active inpatient orders + last-24 h administrations (emar); the discharge medication list (note + prescriptions); documented rationale for any change.",
+]
+
+grounding_requirements = '''
+Required sources: MIMIC-IV-ED medrecon.csv.gz (home meds at arrival); hosp/prescriptions.csv.gz + emar.csv.gz + pharmacy.csv.gz (inpatient + discharge); MIMIC-IV-Note discharge.csv.gz (prose regimen + rationale).
+Required fields: medrecon name/gsn; drug, dose, route, frequency, start/stop; discharge-list membership; last-24 h administration; documented change rationale.
+Required timing logic: Compare home (medrecon ≈ ED arrival) → inpatient → discharge; ‘last 24 h’ measured to dischtime via emar administration times.
+Authoritative public sources
+- Joint Commission National Patient Safety Goal NPSG.03.06.01 (medication reconciliation)
+- WHO High5s Medication Reconciliation SOP.
+'''

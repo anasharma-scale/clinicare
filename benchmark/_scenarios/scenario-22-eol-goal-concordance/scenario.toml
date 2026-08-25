@@ -1,0 +1,44 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "eol-goal-concordance"
+description = "End-of-life care goal-concordance"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For subject_id={subject_id} who died during admission hadm_id={hadm_id}, was the trajectory of care in the final 72 h concordant with documented goals — without indicators of non-beneficial aggressive care? Cite code-status changes and the major decisions.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''In the final 72 h, was care aligned with documented goals — code-status/CMO decisions honored, and intensity of intervention (ventilation, pressors, dialysis, procedures, lines) consistent with those goals rather than escalating against them?'''
+
+inclusion_criteria = [
+  "Documented goals (e.g. DNR/DNI, CMO) are reflected in care during final 72-h: non-comfort interventions de-escalated after the goals decision; symptom management provided; no aggressive interventions continued against documented goals.",
+]  # → YES
+
+exclusion_criteria = [
+  "Aggressive interventions (intubation, pressors, dialysis, procedures) continued or escalated AFTER a documented comfort-oriented goal, or against documented patient/family wishes during final 72-h (non-beneficial aggressive care). A DNR/DNI order alone is NOT a comfort-oriented goal: continuing or starting pressors/dialysis/procedures under DNR/DNI (absent a comfort-measures-only / CMO decision) is not non-beneficial aggressive care.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "Code-status / goals documentation or the final-72-h intervention record is unavailable, so concordance can't be assessed.",
+  "The timing of a goals decision relative to interventions cannot be established (can't separate pre- from post-decision care).",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = []  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Code-status changes over the admission (with times); palliative-care involvement; final 24/72-h interventions (vent, pressors, dialysis, procedures, lines) with times; symptom management; place of death / family presence; supporting note spans.",
+]
+
+grounding_requirements = '''
+Required sources: MIMIC-IV-Note discharge/progress (code status, CMO, family); icu/inputevents (pressors, sedation); procedureevents (lines, dialysis, intubation); chartevents (vent); diagnoses_icd (Z51.5 corroboration); admissions (hospital_expire_flag).
+Required fields: code-status documentation+time; CMO decision; intervention start/stop in final 72 h; comfort-med administration; death time/place.
+Required timing logic: final 24 h and 72 h before death; interventions BEFORE vs AFTER the goals decision.
+Authoritative public sources
+- National Consensus Project Clinical Practice Guidelines for Quality Palliative Care (4th ed.);
+- ‘Measuring What Matters’ palliative-care quality measures (AAHPM/HPNA).
+- Care of Dying Adults in the Last Days of Life [NG31]
+- End of Life Care for Adults: Service Delivery [NG142]
+'''

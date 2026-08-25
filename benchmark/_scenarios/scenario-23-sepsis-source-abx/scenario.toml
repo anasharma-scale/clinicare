@@ -1,0 +1,51 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "sepsis-source-abx"
+description = "Sepsis source identification & antibiotic evolution"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For subject_id={subject_id} with severe sepsis/septic shock on admission hadm_id={hadm_id}, was the source identified and antibiotic therapy appropriately tailored across the stay (empiric → culture/imaging-guided changes, with source control)? If more than one source is documented and the record never resolves to one, the tailoring question does not resolve — say so rather than grading against a source you selected. Trace cultures, imaging, source control, and each antibiotic change with rationale.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Was a sepsis source identified (or appropriately pursued), and did the antibiotic course evolve appropriately — reasonable empiric choice, then changes (narrowing/broadening/addition/stop) justified by returning cultures/imaging — with source control where indicated?'''
+
+inclusion_criteria = [
+  "In a patient presenting with severe sepsis or septic shock on admission, a source for the sepsis was identified by reference to the clinical history, clinical examination or clinical investigations (such as microbiological cultures or radiological imaging) OR a documented and clinically appropriate reason existed for not identifying the source of the sepsis AND",
+  "Empirical antibiotics were started to treat the severe sepsis or septic shock OR there was a documented and clinically appropriate reason for not starting empirical antibiotics AND",
+  "Empirical antibiotics were adapted or reconciled to the clinical history, clinical examination and the results of investigations OR there was a documented and clinically appropriate reason for why such adaptation and reconciliation did not occur AND",
+  "The source of the severe sepsis or septic shock was controlled with clinically appropriate management OR there was a documented and clinically appropriate reason for why such source control did not occur.",
+]  # → YES
+
+exclusion_criteria = [
+  "In a patient presenting with severe sepsis or shock on admission, a source for the sepsis was not identified by reference to the clinical history, clinical examination or clinical investigations AND there was no documented and clinically appropriate reason for not identifying the source of the sepsis OR",
+  "Empirical antibiotics were not started AND there was no documented and clinically appropriate reason for not starting empirical antibiotics OR",
+  "Empirical antibiotics were not adapted to the clinical history, the clinical examination and the results of clinical investigations AND there was no documented and clinically appropriate reason for not adapting empirical antibiotics OR",
+  "The source of the severe sepsis or septic shock was not controlled with clinically appropriate management AND there was no documented and clinically appropriate reason for not undertaking such management.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "Order records rather than administration records suggest that empirical antibiotics were commenced (administration records should be used rather than order records).",
+  "Order records rather than administration records suggest that empirical antibiotics were adjusted to conform to patient's clinical history, clinical examination or clinical investigations (administration records should be used rather than order records).",
+  "Order records rather than implementation records suggest that source control procedure was implemented (implementation records (for example, a surgical note for incision and drainage procedure) should be used rather than order record).",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "Patient record suggests multiple sources of sepsis were identified.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Initial source hypothesis; record of clinical history; record of clinical examination; cultures + results; source-identification imaging; source-control procedures + times; empiric regimen + each change with rationale and ADMINISTRATION/stop time; final confirmed source + hospital day.",
+]
+
+grounding_requirements = '''
+Required sources: hosp/microbiologyevents (cultures, susceptibilities); MIMIC-IV-Note radiology (source imaging) + discharge; hosp/prescriptions + emar (antibiotics); hosp/procedures_icd + icu/procedureevents (source control); diagnoses_icd (corroboration).
+Required fields: organism + susceptibility + time; imaging impression; source-control procedure + time; antibiotic agent/administration/stop; rationale spans.
+Required timing logic: empiric vs culture-return vs change timing across the stay; day of source confirmation — by administration time.
+Authoritative public sources
+- Surviving Sepsis Campaign 2021 (Evans et al., Crit Care Med 2021); IDSA antimicrobial guidance.
+- Centre for Disease Control, Hospital Sepsis Program Core Elements (2023) (\cdc.gov/sepsis/hcp)
+'''

@@ -1,0 +1,52 @@
+# Process rubric for scenario-11 (hfref-gdmt), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Established HFrEF from a documented EF value (echo/note), not an ICD code."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Identified an ACEi/ARB/ARNI on the discharge medication chart OR a documented contraindication AND consideration of an alternative"
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Identified a beta-blocker on the discharge medication chart OR a documented contraindication with an appropriate alternative prescribed or a documented reason for none."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Identified an MRA on the discharge medication chart OR a documented contraindication with an appropriate alternative prescribed or a documented reason for none."
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Identified an SGLT2i on the discharge medication chart OR a documented contraindication with an appropriate alternative prescribed or a documented reason for none."
+
+[[rubric]]
+id = "D6"
+weight = "+2"
+title = "Cited the discharge-summary spans (per-pillar drug + dose) supporting the 0-4 pillar scorecard."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Scored one of the four pillars as a gap where the record documents a contraindication for it."
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Read HFrEF from an ICD code instead of an EF value."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Counted a held/stopped inpatient med as discharge GDMT."

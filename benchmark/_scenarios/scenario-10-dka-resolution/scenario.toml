@@ -1,0 +1,45 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "dka-resolution"
+description = "DKA resolution & protocol adherence"
+params = ["subject_id", "hadm_id", "stay_id"]
+prompt = """
+For ICU stay_id={stay_id} (subject_id={subject_id}, hadm_id={hadm_id}) admitted with DKA, was management protocol-concordant through resolution — anion-gap closure with no major protocol deviation? Give the AG/bicarb/pH/glucose/K trajectory and the timing of key protocol events.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Through the first 24 h, did DKA resolve (glucose < 200 AND ≥2 of: bicarbonate ≥ 15, venous pH > 7.3, anion gap ≤ 12) under a protocol-concordant course — insulin infusion, dextrose added when glucose < 200, SC overlap before drip discontinuation, and K managed (hold insulin if K < 3.5) — without a major deviation?'''
+
+inclusion_criteria = [
+  "DKA resolves by the ADA composite (glucose < 200 AND ≥2 of: bicarbonate ≥ 15, venous pH > 7.3, anion gap ≤ 12) AND no major deviation: dextrose added when glucose < 200, drip not stopped without SC overlap, no insulin given when K < 3.5, potassium repleted as needed.",
+]  # → YES
+
+exclusion_criteria = [
+  "≥1 major protocol deviation (no dextrose when glucose < 200; drip stopped without SC overlap; insulin given when K < 3.5; insulin without dextrose in a non-hyperglycemic patient), or DKA does not reach the ADA resolution composite within the window despite adequate data.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "Insufficient labs to evaluate the ADA resolution composite (e.g. the glucose / bicarbonate / pH / anion-gap values needed are not all available).",
+  "Insulin/dextrose administration timing not recoverable, or captured only in emar (floor) vs inputevents (ICU) such that the drip course can't be reconstructed.",
+  "Drip-rate source ambiguous (chartevents vs inputevents) for SC-overlap detection.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "The DKA protocol was fully applied AND a supervening medical event (pulmonary oedema, AKI, thombosis, cerebral oedema) prevented determination of whether the DKA resolved within a 24 hour period.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Anion gap, bicarbonate, pH, glucose, potassium trajectory; insulin-drip start/stop (administration times); dextrose and SC-insulin timing; initial fluid bolus; K-hold events; ICU charting and medical notation.",
+]
+
+grounding_requirements = '''
+Required sources: hosp/labevents.csv.gz (AG 50868, bicarb 50882, pH 50820, glucose 50931, K 50971); icu/inputevents.csv.gz (insulin 223258, dextrose 220950/220952, NaCl) + emar (floor administrations); icu/chartevents.csv.gz (drip rate).
+Required fields: lab value+charttime; insulin amount/rate + administration time; dextrose start; KCl repletion; SC-insulin transition time.
+Required timing logic: First-24 h window; resolution = the composite (glucose < 200 AND ≥2 of: bicarbonate ≥ 15, venous pH > 7.3, anion gap ≤ 12) — the anion gap is one of three optional markers, not a required one; dextrose trigger at glucose < 200; SC overlap before drip stop — all by administration time.
+Authoritative public sources
+- Adult Diabetic Ketoacidosis (2025) National Library of Medicine (ncbi.nlm.nih.gov)
+- ADA/EASD Hyperglycemic Crises in Adults consensus (2024, Diabetes Care) (diabetesjournals.org/care)
+'''

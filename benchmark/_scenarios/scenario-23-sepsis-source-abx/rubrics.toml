@@ -1,0 +1,57 @@
+# Process rubric for scenario-23 (sepsis-source-abx), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Determined whether the source of the sepsis was identified OR that there was a documented and clinically appropriate reason why the source was not identified."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Determined whether empirical antibiotics were started OR that there was a documented and clinically appropriate reason for not starting empirical antibiotics."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Determined whether empirical antibiotics were tailored according to the results of patient parameters (clinical history, clinical examination and clinical investigations) OR that there was a documented and clinically appropriate reason for not tailoring empirical antibiotics."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Cited each antibiotic change's emar administration/stop time and aligned it to the culture/susceptibility result time."
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Determined whether appropriate source control of the sepsis was implemented OR whether there was a documented and clinically appropriate reason for not implementing source control."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Declared the source 'identified' from an ICD code without culture/imaging confirmation."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Asserted that a specific antibiotic change was driven by culture or susceptibility results without aligning it to that result's time. Tailoring justified on clinical grounds — history, examination, or other investigations — is permitted by the inclusion criteria and is NOT this error."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Used an order record to establish source control rather than an implementation record."
+
+[[rubric]]
+id = "N5"
+weight = "-1"
+title = "Faulted a missing source-control step without checking for a documented and clinically appropriate reason it was not implemented."
+
+[[rubric]]
+id = "N6"
+weight = "-2"
+title = "Selected one source and graded tailoring against it where the record documents multiple candidate sources and never resolves to one."

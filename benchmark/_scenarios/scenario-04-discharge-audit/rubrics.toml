@@ -1,0 +1,53 @@
+# Process rubric for scenario-04 (discharge-audit), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Extracted the material claims from the patient discharge summary (treatments, complications, course, response, quoted values)"
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Verified each claim against the full record (labevents, inputevents, chartevents, procedureevents, admissions)."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Stated that each claim in the discharge summary is verifiable and consistent with the discharge summary OR that one or more claim in the discharge summary is unverifiable or inconsistent with the patient record"
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Stated that all data sets required to verify the claims in the discharge summary were available OR that one or more data sets was not available"
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Stated whether the record contained medical ambiguities preventing verification (e.g., internally conflicting values, or an order without an administration record)."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Asserted that the claim its VERDICT RESTS ON was verified without a real timestamped matching value from the structured chart. Scope: the verdict-bearing claim only — an over-asserted peripheral claim in a summary carrying dozens is not this error — and narrative characterisations ('tolerated the procedure well', 'improved') are not checkable at all."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Asserted a contradiction of a checkable material claim without a real conflicting timestamped value that meets the materiality rule (crosses a clinically actionable threshold, reverses a trend, or misstates a count, dose, date, laterality, site or drug)."
+
+[[rubric]]
+id = "N3"
+weight = "-1"
+title = "Treated a clinical characterisation or an explicitly approximate figure as contradicted by an individual transient or boundary value, rather than judging it against the stream as a whole."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Verified the quoted laboratory or vital values and generalised that conclusion to the narrative claims without checking them separately."
+

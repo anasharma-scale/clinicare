@@ -1,0 +1,67 @@
+# Process rubric for scenario-07 (readmission-30d), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Fixed the index admission date before labeling."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Computed the interval = next admittime − index dischtime."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Confirmed >= 30 days of observable follow-up after index discharge before asserting a negative."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Confirmed icu_stay before index discharge"
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Confirmed imaging before index discharge"
+
+[[rubric]]
+id = "D6"
+weight = "+1"
+title = "Excluded planned/scheduled readmissions from the index admission date."
+
+[[rubric]]
+id = "D7"
+weight = "+1"
+title = "Verified the readmission clinical presentation"
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Asserted a negative without verifying that ≥30 d of observable follow-up exists after index discharge."
+
+[[rubric]]
+id = "N2"
+weight = "-1"
+title = "Counted a planned/scheduled readmission as a readmission."
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Failed to fix the index admission (used the wrong index in a frequent-admitter)."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Established that the index admission ended in death from an ICD code alone rather than hospital_expire_flag AND the discharge disposition."
+
+[[rubric]]
+id = "N5"
+weight = "-2"
+title = "Counted a candidate encounter as a true separate inpatient readmission without ruling out an administrative continuation or transfer (e.g. OBSERVATION ADMIT type, or same care unit minutes apart with a conflicting disposition)."

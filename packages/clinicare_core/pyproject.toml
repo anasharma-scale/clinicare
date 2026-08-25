@@ -1,0 +1,24 @@
+[project]
+name = "clinicare-core"
+version = "0.1.0"
+description = "Shared helpers for CliniCARE-Bench — task ids, .env loading, and the agent shims."
+# Host-side only (never installed into the trial image), so it tracks the root's 3.12 floor.
+requires-python = ">=3.12"
+# The kernel (taskids, env) imports nothing outside the stdlib, so a script that only needs a
+# task id doesn't drag in harbor. The agent shims DO need harbor, but they live in a submodule,
+# so that cost is paid only by whoever imports clinicare_core.agents.*.
+dependencies = []
+
+[project.optional-dependencies]
+# The harbor Agent subclasses under clinicare_core.agents. Installed via the root project, which
+# already depends on harbor — listed here so this package is independently installable too.
+# Keep this range in lockstep with the root pyproject: codex_mcp_fix overrides a harbor internal
+# that 0.21.0 removed, and the failure is silent (see the root's note).
+agents = ["harbor>=0.16.1,<0.21"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/clinicare_core"]

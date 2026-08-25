@@ -1,0 +1,50 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "advanced-imaging"
+description = "Advanced cross-sectional imaging receipt (ICU stay)"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For the ICU stay subject_id={subject_id}, hadm_id={hadm_id}, did this patient receive advanced cross-sectional imaging — a CT or MRI — at any point during this ICU stay? Decide how to identify imaging events and cite the evidence.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''During the index ICU stay window [intime, outtime], did the patient receive ≥1 advanced cross-sectional imaging study — defined as a study performed on an imaging device (CT scanner, MRI, or cross-sectional IR) used to scan the body?'''
+
+inclusion_criteria = [
+  "During their ICU stay, one or more cross-sectional imaging modality (CT/MRI/cross-sectional IR) was performed for the patient as evidenced by a radiology report explicitly or implicitly stating that the imaging modality actually took place.",
+  "≥1 POE radiology order (order_type=\"Radiology\") with a CT/MRI-class subtype (\"CT Scan\", \"MRI\", \"Cross-Sectional IR\"), ordertime within the stay window, AND a radiology report (radiology.csv.gz) confirming the study was actually performed. An order alone, with no confirming report, is not sufficient for Yes (route to Indeterminate - lack of data).",
+]  # → YES
+
+exclusion_criteria = [
+  "During their ICU stay, no cross-sectional imaging modality (CT/MRI/cross-sectional IR) was performed for the patient as evidenced by a radiology report explicitly or implicitly stating that the imaging modality actually took place.",
+  "No radiology order of any kind falls within the ICU stay window, and the order stream for the stay is present and complete (so the absence is a true negative, not missing data).",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "ICU data (or ICU coding) is not available to establish that the patient was admitted to ICU during their stay.",
+  "Radiology reports are not available to determine whether the patient either did, or did not, have cross-sectional imaging during their ICU stay.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "The patient's status as an ICU patient changed in the period immediately before or after the cross-sectional image was performed, thereby making it difficult to determine whether the patient was in ICU at the time.",
+  "The patient's status as an ICU patient changed in period immediately before or after the radiology report was written, thereby making it difficult to determine whether the patient was an ICU patient at the time.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "POE radiology orders for cross-sectional imaging (CT, MRI and cross-sectional IR) (subtype, ordertime, status); the ICU stay window; the corresponding radiology report for cross-sectional imaging to confirm.",
+]
+
+grounding_requirements = '''
+- hosp/poe.csv.gz
+- icu/icustays.csv.gz
+- MIMIC-IV-Note radiology.csv.gz
+- Timing: ordertime inside the specific ICU stay window
+  - for multi-stay admissions attribute each order to one stay before labeling
+Authoritative public sources
+- Imaging of ICU Patients (2019) Thoracic Imaging (pmc.ncbi.nlm.nih.gov)
+- Imaging in the Intensive Care Unit (2009) Surgery (sciendirect.com)
+- CMS ADI definition can be a light taxonomy anchor for advanced-vs-bedside care
+'''

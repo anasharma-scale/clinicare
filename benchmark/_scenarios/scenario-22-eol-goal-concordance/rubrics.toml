@@ -1,0 +1,52 @@
+# Process rubric for scenario-22 (eol-goal-concordance), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Established the time of each code-status/CMO decision and whether it preceded the interventions being assessed."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Mapped final-72-h relative to the goals decision."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Separated pre-decision from post-decision care intensity."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Confirmed symptom management  (analgesics, antiemetics, anti-pyretics, sedatives) was provided."
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Confirmed non-comfort interventions were de-escalated after a comfort-oriented (CMO) goal, OR that de-escalation was not required because only DNR/DNI (not CMO) was in effect."
+
+[[rubric]]
+id = "D6"
+weight = "+2"
+title = "Returned Indeterminate - lack of data (concordance can't be assessed) when goals documentation or the final-72-h intervention record was unavailable."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Judged concordance from a palliative (Z51.5) code alone."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Faulted appropriate pre-decision aggressive care (ignored the pre/post split)."
+
+[[rubric]]
+id = "N3"
+weight = "-1"
+title = "Concluded No without confirming the goals documentation exists."

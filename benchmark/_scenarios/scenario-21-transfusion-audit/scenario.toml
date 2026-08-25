@@ -1,0 +1,49 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "transfusion-audit"
+description = "RBC transfusion indication audit"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For subject_id={subject_id} (hadm_id={hadm_id}), were all packed-RBC transfusions indicated under the applicable restrictive-transfusion thresholds, or by active bleeding / hemodynamic instability / other documented justification? Give pre/post-Hgb and the clinical context for each unit.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''For every PRBC transfusion, was the pre-transfusion hemoglobin below the applicable restrictive threshold, or was there active bleeding / hemodynamic instability / ACS justifying transfusion above threshold?'''
+
+inclusion_criteria = [
+  "Where a patient has had a transfusion of RBCs, the pre-Hgb was below the applicable AABB restrictive threshold: < 7 g/dL for a hemodynamically stable adult; < 7.5 g/dL for cardiac surgery; < 8 g/dL for preexisting cardiovascular disease or orthopedic surgery; < 7 g/dL for hematologic/oncologic patients OR",
+  "There was a documented active-bleeding/instability/ACS justification for transfusion of RBCs above those thresholds OR",
+  "There was another documented and clinically appropriate reason for transfusion of RBCs above those thresholds (e.g. symptomatic anemia — symptoms/signs are a documented-justification modifier, not a fixed cutoff).",
+]  # → YES
+
+exclusion_criteria = [
+  "Where a patient had a transfusion of RBCs, the applicable AABB restrictive threshold was not met (< 7 stable; < 7.5 cardiac surgery; < 8 preexisting cardiovascular disease or orthopedic surgery; < 7 hematologic/oncologic) AND",
+  "There was no documented active-bleeding/instability/ACS justification for transfusion of RBCs above those thresholds AND",
+  "There was no other documented and clinically appropriate reason for transfusion of RBCs above the specified thresholds.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "The patient's pre-transfusion Hgb is not available to determine whether the specified thresholds for transfusion of RBCs have been met.",
+  "The patient's medical records are not available or are not complete thereby preventing identification of reasons for transfusing RBCs above specified thresholds.",
+  "During massive transfusion the nearest-before Hgb is missing, so a pre-transfusion value cannot be established at all.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "Dilutional anomalies during mass or multiple transfusions of RBCs or infusions generally create doubt about the accuracy of Hgb results.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Each transfusion time; paired pre/post-Hgb (nearest-before / after); clinical state (bleeding, ACS, hemodynamic instability); documented indication; total units; patient's notes peri-transfusion.",
+]
+
+grounding_requirements = '''
+Required sources: icu/inputevents (PRBC 225168); hosp/labevents (Hgb 51222); icu/chartevents (vitals, bleeding); MIMIC-IV-Note (indication); diagnoses_icd (corroboration).
+Required fields: transfusion time + units; pre/post-Hgb (NEAREST before/after); MAP/SBP/HR; documented indication.
+Required timing logic: pre-Hgb = nearest value BEFORE each transfusion; post-Hgb after; align clinical context to transfusion time.
+Authoritative public sources
+- Red Cell Transfusion: 2023 AABB International Guidelines (2023) Journal of the American Medical Association (jamanetwork.com/journals/jama)
+- AABB Clinical Practice Resources (2023) Association for the Advancement of Blood and Biotherapies (aabb.org/resources)
+'''

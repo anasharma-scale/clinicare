@@ -1,0 +1,45 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "icu-delirium"
+description = "ICU delirium screening & ABCDEF management"
+params = ["subject_id", "hadm_id", "stay_id"]
+prompt = """
+For ICU stay_id={stay_id} (subject_id={subject_id}, hadm_id={hadm_id}) with a delirium risk factor, was delirium screened and managed per the ABCDEF bundle? Note screening frequency, deliriogenic-med exposure, and the bundle elements applied.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Was a validated delirium screen (CAM-ICU) documented at expected frequency, and — if positive — were bundle measures applied (pain management, sedation lightening, mobilization, sleep, deliriogenic-med minimization, family engagement), with deliriogenic agents avoided or justified?'''
+
+inclusion_criteria = [
+  "Where a patient with a delirium risk factor was admitted to ICU, a delirium screen was performed OR there was a documented and clinically appropriate reason for not performing that screen AND",
+  "Where a patient was found to be delirious, the patient was managed according to the ABCDEF critical care delirium bundle and deliriogenic agents were stopped OR there was a documented and clinically appropriate reason for not doing so.",
+]  # → YES
+
+exclusion_criteria = [
+  "A patient with a delirium risk factor was admitted to ICU but a delirium risk screen was not performed OR there was no documented and clinically appropriate reason for not performing a delirium screen OR",
+  "A patient that had a positive delirium risk screen was not managed according to the ABCDEF critical care delirium bundle or deliriogenic agents were not stopped AND there was no documented and clinically appropriate reason for not doing so.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "The CAM-ICU/RASS charting stream is unavailable or unretrievable (a data-access gap), so whether screening occurred cannot be determined.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = []  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "CAM-ICU/RASS charting (chartevents); sedative/analgesic infusions; pain charting; deliriogenic-med administration; mobility/SAT-SBT documentation.",
+]
+
+grounding_requirements = '''
+Required sources: icu/chartevents (CAM-ICU, RASS); icu/inputevents (benzodiazepines 221385/221668, propofol, dexmedetomidine); emar (anticholinergics, meperidine); MIMIC-IV-Note.
+Required fields: CAM-ICU result+charttime; RASS; sedative drug/rate; deliriogenic-med administration; mobility/SAT documentation.
+Required timing logic: screening frequency per ICU day; management response after a positive screen.
+Authoritative public sources
+- The ABCDEF Bundle in Critical Care (2017) Critical Care Clinics (pmc.ncbi.nlm.nih.gov)
+- Effectiveness of the ABCDEF Bundle on Delirium (2021) BMJ Open (bmjopen.bmj.com/content)
+- SCCM PADIS Guidelines (Devlin et al., Crit Care Med 2018)
+- SCCM ICU Liberation / ABCDEF bundle.
+'''

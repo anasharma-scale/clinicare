@@ -1,0 +1,57 @@
+# Process rubric for scenario-10 (dka-resolution), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Confirmed that the patient was admitted to ICU with DKA"
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Determined whether the patient was managed according to DKA treatment protocol OR whether there was a documented and clinically appropriate reason for not complying with any element of that protocol"
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Stated that case is appropriate for consideration of effect of DKA protocol on DKA resolution OR that case is not appropriate"
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Determined whether or not DKA resolved within the first 24 hours OR stated that the question cannot be answered on the available evidence"
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Stated that all evidence was available to answer both questions (DKA protocol implementation and DKA resolution) or that all necessary evidence was not available"
+
+[[rubric]]
+id = "D6"
+weight = "+1"
+title = "Determined whether or not patient had any supervening medical event that may have affected management or progression of DKA"
+
+[[rubric]]
+id = "D7"
+weight = "+2"
+title = "Checked for each major protocol deviation: no dextrose when glucose < 200, drip stopped without SC overlap, insulin given when K < 3.5, insulin without dextrose in a non-hyperglycemic patient."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Read DKA resolution from a note/discharge statement instead of computing the AG trajectory."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Declared resolution from a single marker in isolation, without applying a complete published definition — either the StatPearls composite (glucose < 200 AND ≥2 of: bicarbonate ≥ 15, venous pH > 7.3, anion gap ≤ 12) or the ADA/EASD 2024 definition (ketone < 0.6 mmol/L AND venous pH ≥ 7.3 or bicarbonate ≥ 18). Either is acceptable; both are governing docs. Grade the values the agent relied on, not which framing it recited."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Used order time instead of administration time for protocol-step timing."

@@ -1,0 +1,10 @@
+# Downloaded trace dumps — large and regenerable. Never commit.
+traces/
+__pycache__/
+
+# Raw annotation export — MIMIC-note-derived clinical text (MIMIC DUA). Distill
+# to gold_sources.json via build_gold.py instead of committing the raw CSV.
+# (gold_sources.json / required_evidence.json are scenario-level and carry no patient
+# identifiers, so those ARE committed — and must be, since the published numbers are
+# computed against exactly those files.)
+annotation/

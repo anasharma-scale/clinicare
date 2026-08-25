@@ -1,0 +1,47 @@
+# Process rubric for scenario-21 (transfusion-audit), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Identified every RBC transfusion event and total units from icu/inputevents (PRBC itemid 225168)."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Paired each unit with its nearest Hgb (labevents 51222) BEFORE the transfusion time OR stated that a pre-transfusion Hgb was not available."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Selected the APPLICABLE AABB restrictive threshold for this patient (< 7 stable; < 7.5 cardiac surgery; < 8 preexisting cardiovascular disease or orthopedic surgery; < 7 hematologic/oncologic) and determined whether it was complied with OR that it was not possible to make that determination on the available evidence"
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Determined whether or not there was a documented active-bleeding/instability/ACS justification for the RBC transfusion OR stated that it was not necessary to make that determination because specified thresholds were complied with"
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Determined whether or not there was any other documented and clinically appropriate reason for the transfusion of RBCs OR stated that it was not necessary to make that determination because specified thresholds were complied with"
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Used a post-transfusion or distant Hgb as the pre-transfusion value."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Flagged an above-threshold unit as non-indicated without checking for bleeding/ACS justification."
+
+[[rubric]]
+id = "N3"
+weight = "-1"
+title = "Read the transfusion indication from an ICD code instead of the pre-transfusion Hgb and the documented clinical context (diagnoses_icd is corroboration only)."

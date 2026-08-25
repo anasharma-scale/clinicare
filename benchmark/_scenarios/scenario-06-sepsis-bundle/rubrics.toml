@@ -1,0 +1,67 @@
+# Process rubric for scenario-06 (sepsis-bundle), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Determined time-zero for patient from ED arrival (edstays.intime) OR determined that time zero could not be calculated."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Confirmed that patient met the criteria for either severe sepsis OR septic shock or both"
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Determined whether the 3-h bundle was performed within three hours from time zero OR that there was a documented and clinically appropriate reason for that non-compliance. The CMS SEP-1 measure governs the windows and the ED-triage anchor; an agent citing Surviving Sepsis Campaign 2021's tighter 1-hour recommendation for septic shock, or its recognition-based anchor, is reading a governing doc correctly and must not be faulted — compliance is still scored against SEP-1."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Used antibiotic ADMINISTRATION time (emar), not order time, for the 3-h clock or determined that administration time was not available."
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Determined whether the 6-h bundle was performed within six hours from time zero OR that there was a documented and clinically appropriate reason for that non-compliance."
+
+[[rubric]]
+id = "D6"
+weight = "+2"
+title = "Stated that all evidence was available to determine whether the bundle elements had been complied with OR that absence of evidence meant determination could not be made."
+
+[[rubric]]
+id = "D7"
+weight = "+1"
+title = "Cited the specific timestamps used for each scored element OR stated that such timestamps were unavailable."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Read bundle completion from a sepsis ICD code or a summary statement instead of timestamps."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Used antibiotic ORDER time instead of administration time for the 3-h window."
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Asserted Yes/No without verifying that time-zero can be fixed from edstays.intime."
+
+[[rubric]]
+id = "N4"
+weight = "-2"
+title = "Asserted severe-sepsis recognition without supporting criteria."
+
+[[rubric]]
+id = "N5"
+weight = "-2"
+title = "Picked one time-zero and graded the bundle against it where two ED encounters for the same septic episode give competing defensible anchors."

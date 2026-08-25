@@ -1,0 +1,48 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "anticoag-reversal"
+description = "Anticoagulation reversal concordance"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For anticoagulated patient subject_id={subject_id} on admission hadm_id={hadm_id} who presented with significant bleeding, was the reversal decision guideline-concordant — right agent, dosed and timed appropriately for the anticoagulant and bleed?
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Did the reversal match current guidelines for the specific anticoagulant and bleed (4-factor PCC over FFP for warfarin major bleed; idarucizumab for dabigatran; andexanet for apixaban/rivaroxaban where available) — reversal being indicated for a major bleed and appropriately withheld for a nonmajor/minor/self-limited bleed or when its risk outweighs the benefit — administered without undue delay?'''
+
+inclusion_criteria = [
+  "Where an anticoagulated patient presented with significant bleeding, the patient was administered the appropriate reversal agent according to current clinical guidelines (per the ACC major-vs-nonmajor bleed framework, reversal is indicated for a major bleed), OR reversal was correctly withheld — a nonmajor/minor or self-limited bleed, or a situation where the risk of reversal outweighs the benefit — OR there was another documented and clinically appropriate reason not to administer that agent AND",
+  "The patient received the correct dose of the reversal agent according to current clinical guidelines OR there was a documented and clinically appropriate reason why that dose was not administered AND",
+  "The reversal agent was administered without undue delay OR there was a documented and clinically appropriate reason for any delay.",
+]  # → YES
+
+exclusion_criteria = [
+  "Where an anticoagulated patient presented with significant bleeding, the patient was administered a reversal agent that does not accord with current clinical guidelines (or no reversal agent at all) AND there was no documented and clinically appropriate reason for that decision OR",
+  "The patient did not receive the correct dose of the reversal agent under current clinical guidelines AND there was no documented and clinically appropriate reason for that decision OR",
+  "The reversal agent was administered with undue delay and there was no documented and clinically appropriate reason for that delay.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "No anticoagulant-reversal decision was indicated: the patient was not on a therapeutic anticoagulant at presentation, or the bleeding was not anticoagulant-associated (e.g. a post-thrombolytic/tPA hemorrhagic transformation), so the reversal guidelines do not apply — out of scope.",
+  "The data pertaining to the identity of the patient's anticoagulant, the anticoagulation screen lab results, the administration of the reversal dose or the time that the reversal was administered, cannot be ascertained, thereby preventing an assessment of concordance.",
+  "The extent of the patient's bleeding on presentation cannot be ascertained, thereby preventing an assessment of whether the anticoagulant reversal guidelines needed to be applied.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = []  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Anticoagulant + last-dose timing; INR/anti-Xa on arrival; bleeding type and extent of bleeding; reversal agents (dose, ADMINISTRATION timing); arrival-to-reversal interval; era/availability context.",
+]
+
+grounding_requirements = '''
+Required sources: hosp/prescriptions + emar (warfarin/DOAC/heparin, vitamin K, PCC, idarucizumab, andexanet); icu/inputevents (FFP 220970, octreotide 225155); labevents (INR 51237, anti-Xa); MIMIC-IV-Note (bleed, decision); diagnoses_icd (bleed codes).
+Required fields: anticoagulant + last dose; INR/anti-Xa + charttime; reversal agent + dose + administration time; bleed type and extent of bleeding.
+Required timing logic: arrival-to-first-reversal interval; reversal relative to INR/bleed.
+Authoritative public sources
+- 2020 ACC Expert Consensus Decision Pathway on Management of Bleeding in Patients on Oral Anticoagulants (Tomaselli et al., JACC 2020)
+- ASH 2018 VTE guidelines
+- Neurocritical Care Society reversal guideline.
+'''

@@ -1,0 +1,61 @@
+[project]
+name = "clinicare"
+version = "0.1.0"
+description = "CliniCARE-Bench — a clinical agent benchmark over MIMIC-IV"
+readme = "README.md"
+# 3.12 is harbor's floor, and harbor is a hard dependency of the host-side runner. Note the
+# deliberate split: `mimic_tools` keeps a >=3.11 floor because it is the only package installed
+# INSIDE the trial image (python:3.11-slim) and it never imports harbor.
+requires-python = ">=3.12"
+
+# `uv.lock` is committed and pins exact versions, so `uv sync` reproduces the published
+# environment. The UPPER bounds below are the backstop for everything that does NOT read that
+# lock: the trial image's fresh `pip install` (see packages/mimic_tools/pyproject.toml), plain
+# pip, and `uv lock --upgrade`. Without them a re-resolve silently adopts the newest release —
+# not hypothetical, mcp 2.0.0 renamed Tool.inputSchema -> Tool.input_schema and took every trial
+# down with it. Raise a bound deliberately, with a test run — never by omission.
+dependencies = [
+    # The task harness. Public PyPI build: the docker backend is built in and needs no extra.
+    # Ceiling is NOT cosmetic: harbor 0.21.0 removed Codex._build_register_mcp_servers_command
+    # (MCP registration moved to a _build_effective_config / config_source design). The Codex
+    # shim in clinicare_core.agents.codex_mcp_fix overrides that method, so on >=0.21 the
+    # override silently becomes dead code, codex starts with NO MIMIC tools, and trials score
+    # 0 while looking like ordinary bad answers. Porting the shim means re-validating the codex
+    # arms end to end. Floor is the version the published results were produced on.
+    "harbor>=0.16.1,<0.21",
+    # The MIMIC tool surface the agent calls (workspace member, see [tool.uv.sources]).
+    "mimic-tools[duckdb]",
+    # Shared helpers — task ids, .env loading, and the harbor agent shims. Installing it is what
+    # makes `--agent-import-path clinicare_core.agents.…:Class` resolve without a PYTHONPATH
+    # prefix, and what lets benchmark/ and construction/ share taskids without sys.path games.
+    "clinicare-core[agents]",
+    # LLM judges: benchmark/eval/metrics/grounding/insight_grounding_llm.py speaks the OpenAI SDK.
+    "openai>=1.0,<3",
+]
+
+[project.optional-dependencies]
+# Run trials on Modal instead of local docker.
+modal = ["harbor[modal]>=0.16.1,<0.21"]
+# Rebuilding the benchmark from MIMIC rather than just running it — see construction/README.md.
+# PyMuPDF rasterizes guideline PDFs for the vision model. trafilatura pulls web main-content
+# to Markdown. defusedxml hardens the EPUB/OPF parsing in ingest_corpus.py.
+# Host-side only; never shipped into a trial container.
+construction = ["pymupdf>=1.24,<2", "trafilatura>=1.8,<3", "defusedxml>=0.7,<1"]
+# Passthroughs to the mimic_tools extras of the same name: the contributor Streamlit console and
+# the sidecar's FastAPI service. Surfaced here because a bare `--extra ui` only consults the ROOT
+# project's table, and both are documented as run from the repo root. The alternative,
+# `uv sync --package mimic-tools --extra ui`, rebuilds the environment around that one package
+# and drops harbor, so you could no longer run a trial from the same venv.
+ui = ["mimic-tools[ui]"]
+api = ["mimic-tools[api]"]
+
+[tool.uv.workspace]
+members = ["packages/mimic_tools", "packages/clinicare_core"]
+
+[tool.uv.sources]
+mimic-tools = { workspace = true }
+clinicare-core = { workspace = true }
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

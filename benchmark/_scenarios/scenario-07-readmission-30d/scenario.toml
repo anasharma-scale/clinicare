@@ -1,0 +1,49 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "readmission-30d"
+description = "30-day readmission occurrence"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For index admission hadm_id={hadm_id} (subject_id={subject_id}) — an ICU stay with imaging — was the patient readmitted to the hospital within 30 days of discharge? A later encounter counts only if it is a true separate inpatient admission; where the record leaves it ambiguous whether it is that or an administrative continuation or transfer, the question does not resolve — say so rather than counting it. Cite the index discharge date and the next admit date.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Did a subsequent UNPLANNED inpatient admission begin within 30 days of the index discharge date, with at least 30 days of observable follow-up after the index discharge? Planned vs unplanned is determined per the CMS Planned Readmission Algorithm — a readmission for an always-planned procedure, or for a planned procedure without an acute/complication diagnosis, is PLANNED and does not count.'''
+
+inclusion_criteria = [
+  "A later UNPLANNED inpatient admission's admittime falls 0–30 days after the index dischtime — unplanned per the CMS Planned Readmission Algorithm (a readmission for an always-planned procedure, or a planned procedure without an acute/complication diagnosis, is planned and is excluded) — AND index dischtime follows icustay_id AND imaging.",
+]  # → YES
+
+exclusion_criteria = [
+  "Readmission begins only after 30 days of index discharge following ICU admission AND imaging.",
+  "No readmission begins within 30 days of index discharge following ICU admission AND imaging.",
+  "The only readmission within 30 days is a PLANNED readmission per the CMS Planned Readmission Algorithm (an always-planned procedure, or a planned procedure without an acute/complication diagnosis).",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "Index discharge is < 30 days before the patient's last observable record (follow-up censored — cannot confirm a true negative).",
+  "Readmission < 30 days within index discharge but icu_stay before index discharge is unverifiable.",
+  "Index admission ended in death (no readmission possible / out of scope) — verified from hospital_expire_flag AND discharge disposition, not a code alone.",
+  "The index admission cannot be uniquely fixed — the encounter the question names does not resolve to a single admission record (for example overlapping or duplicated admissions), so there is no index discharge date from which to measure the 30-day window.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "A candidate readmission is ambiguously a transfer or observation stay rather than a true separate inpatient admission — for example admission_type is OBSERVATION ADMIT while the encounter otherwise looks inpatient, or the patient never physically left (the index admission's final care unit and the candidate's first care unit are the same, minutes apart, with a conflicting discharge disposition). The records that would settle it are present and disagree, which is what makes this ambiguity rather than lack of data; where the index admission itself cannot be fixed, the lack-of-data criterion above governs.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Index admittime/dischtime; all of the patient's admittimes (including icustays); admission type/disposition (planned vs unplanned, transfer/observation); the index discharge summary (foreshadowing sub-analysis); DRG severity for stratification.",
+  "Imaging (radiology) before Index discharge",
+]
+
+grounding_requirements = '''
+Required sources: hosp/admissions.csv.gz (admit/disch, admission_type, discharge_location, hospital_expire_flag); hosp/transfers.csv.gz (transfer vs new admit); hosp/drgcodes.csv.gz (severity); radiology_detail; MIMIC-IV-Note discharge.csv.gz (foreshadowing).
+Required fields: admittime, dischtime, admission_type, discharge_location, hospital_expire_flag; subject_id; text; exam name; readmission diagnosis vs index discharge-summary concerns.
+Required timing logic: Interval = next admittime − index dischtime ≤ 30 d; fix the index admission before labeling.
+Authoritative public sources
+- CMS Hospital-Wide All-Cause Unplanned Readmission (HWR) measure methodology
+- Hospital Readmissions Reduction Program (HRRP) — including the planned-readmission algorithm.
+'''

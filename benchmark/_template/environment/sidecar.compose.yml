@@ -1,0 +1,108 @@
+# mimic-tools sidecar — the ONLY container in a trial with data credentials + data egress.
+#
+# This is the SOURCE for the ONE shared sidecar compose. build_tasks.py bakes the resolved env-image
+# ref (${MIMIC_ENV_IMAGE}) + the absolute policy-corpus path (./policy_corpus) into it and writes
+# <out_dir>/_sidecar.compose.yml. A DOCKER run merges it via `harbor run --extra-docker-compose
+# <out_dir>/_sidecar.compose.yml` (adds this sidecar + the `main` overlay on top of the base agent
+# service + egress overlay). It is deliberately NOT written per-task as environment/docker-compose.yaml:
+# that would force Harbor's MODAL provider into compose mode (DinD + host networking), which DISABLES
+# network_mode=allowlist. MODAL ignores this file entirely (reaches a self-hosted sidecar via
+# MIMIC_TOOLS_URL). The ${VAR}s below are resolved by docker-compose from the host env + the task's
+# resolved [environment.env] at run time. See packages/mimic_tools/SIDECAR.md.
+services:
+  # Inject the sidecar coordinates into the AGENT container. This is REQUIRED on docker: Harbor
+  # routes [environment.env] only to the docker-compose CLI (for file interpolation), not into the
+  # container, and it does not interpolate ${VAR} in mcp_servers.args — so the proxy shim's
+  # MIMIC_TOOLS_* must arrive as real container env, which this does (compose `environment:` on a
+  # service IS the container env, inherited by `docker exec` + the MCP subprocess). Merges additively
+  # into Harbor's base `main` service (image/command untouched).
+  main:
+    environment:
+      # HARDCODED, deliberately not ${MIMIC_TOOLS_URL:-…}. This overlay is used ONLY by a docker
+      # run, where the sidecar is the compose service beside this container — definitionally local.
+      # Interpolating would let a stray host MIMIC_TOOLS_URL silently point a "local" run at some
+      # other sidecar, with no local one started and the compose path never exercised. The host-env
+      # override belongs to task.toml's [environment.env], which is the non-docker path.
+      MIMIC_TOOLS_URL: "http://mimic-tools.internal:8799"
+      MIMIC_TOOLS_API_KEY: "${MIMIC_API_SECRET:-}"
+      MIMIC_POLICY_TOOLS: "${MIMIC_POLICY_TOOLS:-1}"
+      # claude-code reads its MCP timeouts from the container env — the overlay is the only way in
+      # on docker (task [environment.env] doesn't reach the container). 600s per-call so slow note
+      # reads complete instead of false-ILD'ing (codex uses MCP_STARTUP_TIMEOUT_SEC; gemini 600s).
+      MCP_TIMEOUT: "${MCP_TIMEOUT:-120000}"
+      MCP_TOOL_TIMEOUT: "${MCP_TOOL_TIMEOUT:-600000}"
+      # NO JUDGE_* here, deliberately. The in-container verifier is deterministic-only
+      # and makes no LLM call, so it needs no judge creds —
+      # and this overlay injects env into the AGENT container, which the agent has shell access to.
+      # Putting a judge API key there is what the credential-isolation sidecar exists to prevent.
+      # The LLM-judged metrics run outside the trial (benchmark/eval/grade.py) and read
+      # JUDGE_BASE_URL / JUDGE_API_KEY from the shell you invoke that in.
+
+  mimic-tools:
+    image: ${MIMIC_ENV_IMAGE}          # same ref as [environment].docker_image
+    command: ["python", "-m", "mimic_tools.serve"]
+    # Back to root, deliberately. The image runs as the non-root `agent` user so the UNTRUSTED
+    # agent does not get uid 0; this service is trusted code with no shell exposed to the agent,
+    # and it has to read the operator's MIMIC Parquet tree through the bind mount below — whose
+    # host uid/mode we do not control. A credentialed tree at mode 700 would leave uid 10001
+    # unable to read it and the startup preflight would fail the whole trial.
+    user: "root"
+    environment:
+      MIMIC_TOOLS_HOST: "0.0.0.0"      # reachable on the private trial network
+      MIMIC_TOOLS_PORT: "8799"
+      # --- auth (shared secret the agent's shim sends as x-api-key) ---
+      MIMIC_API_SECRET: "${MIMIC_API_SECRET}"
+      MIMIC_REQUIRE_API_SECRET: "1"    # fail closed: refuse to start unauthenticated
+      # --- backend + data ---
+      # The host's MIMIC Parquet tree is bind-mounted read-only below; this is the in-container
+      # path to it. Set MIMIC_BACKEND=bigquery instead to query PhysioNet BigQuery (then the
+      # mount is unnecessary, but the sidecar needs egress to bigquery.googleapis.com and an
+      # ADC credential mounted at ~/.config/gcloud).
+      MIMIC_BACKEND: "duckdb"
+      MIMIC_DATA_ROOT: "/data/mimic"
+      # --- policy tools: serve them from HERE, so the corpus lives with the sidecar. Follows the
+      # task's [environment.env] MIMIC_POLICY_TOOLS (build_tasks.py --no-policy flips it to "0"),
+      # via docker-compose interpolation — so main + sidecar stay in lockstep with one source. ---
+      MIMIC_POLICY_TOOLS: "${MIMIC_POLICY_TOOLS:-1}"
+      POLICY_CORPUS_DIR: "/workspace/policy_corpus"
+    volumes:
+      # Stage the (non-sensitive) policy corpus into the sidecar instead of the agent container.
+      - ./policy_corpus:/workspace/policy_corpus:ro
+      # The MIMIC Parquet tree, READ-ONLY. Mounted here and nowhere else: the sidecar is the only
+      # container permitted to touch patient data, which is the entire point of the split.
+      # ${MIMIC_DATA_ROOT} is the path on the HOST; /data/mimic is what the sidecar reads.
+      - ${MIMIC_DATA_ROOT:?set MIMIC_DATA_ROOT to your local MIMIC Parquet root}:/data/mimic:ro
+    # MUST be on Harbor's `default` compose network (NOT a private bridge). Declaring `networks`
+    # explicitly excludes this service from egress control (Harbor only force-routes services with
+    # NO explicit networking through the egress sidecar — it tests for the `networks` KEY, so the
+    # long form below is equivalent to the short one for that purpose). Being on `default` is also
+    # what lets the egress sidecar resolve and route the agent's allowlisted traffic here; a
+    # separate bridge would make this sidecar unreachable from the egress-controlled agent.
+    #
+    # The `mimic-tools.internal` alias is what the agent actually dials, NOT the bare service name.
+    # Reason: allowed_hosts is one list shared by every backend, and some backends validate each
+    # entry server-side as a domain — a bare label is rejected outright ("Invalid domain:
+    # mimic-tools"), which kills every trial before the agent starts. A dotted name is accepted
+    # there and resolves under docker's embedded DNS as a network alias, so one list validates
+    # everywhere. `.internal` is ICANN-reserved for private use (unlike `.local`, which
+    # resolvers may hand to mDNS). Keep this alias, the allowed_hosts entry, and the two
+    # MIMIC_TOOLS_URL defaults in lockstep — they are one fact spelled in three places.
+    networks:
+      default:
+        aliases:
+          - mimic-tools.internal
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8799/healthz')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+# The agent container is denied direct egress — its only outbound allowance is the model
+# endpoint(s) plus mimic-tools.internal:8799. That is set on the AGENT via task.toml
+# [environment], where build_tasks.py injects the list from $CLINICARE_ALLOWED_HOSTS:
+#   network_mode  = "allowlist"
+#   allowed_hosts = ["api.anthropic.com", ..., "mimic-tools.internal"]
+# Harbor routes the agent's TCP through its egress-control sidecar (nftables + GOST allowlist),
+# which blocks the open web and the instance-metadata endpoint while permitting the allowlisted
+# hosts. This service stays OFF that namespace (explicit `networks: [default]` above).
+# See packages/mimic_tools/SIDECAR.md.

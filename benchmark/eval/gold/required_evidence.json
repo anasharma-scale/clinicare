@@ -1,0 +1,344 @@
+{
+  "advanced-imaging": {
+    "task": 1,
+    "task_name": "Task 1 \u2014 Advanced cross-sectional imaging receipt (ICU stay)",
+    "source": "edited",
+    "categories": [
+      "Radiology orders for cross-sectional imaging",
+      "Order details (subtype, order time, status)",
+      "ICU stay window",
+      "Radiology report for cross-sectional imaging"
+    ]
+  },
+  "post-ct-aki": {
+    "task": 2,
+    "task_name": "Task 2 \u2014 Post-CT acute kidney injury (KDIGO)",
+    "source": "base",
+    "categories": [
+      "Creatinine timeline 7 days pre-CT to 48 hours post-CT",
+      "ESRD/dialysis status",
+      "CT scan time distinguished from order time",
+      "Radiology report confirmation of CT scan time"
+    ]
+  },
+  "pe-workup": {
+    "task": 3,
+    "task_name": "Task 3 \u2014 PE workup adequacy (chest pain / dyspnea)",
+    "source": "base",
+    "categories": [
+      "PE consideration and risk-pathway documentation",
+      "PE workup documentation",
+      "PE documented conclusion",
+      "PE treatment intent and modality documentation",
+      "Negative evidence for PE (impression excluding PE, no PE/DVT code, no therapeutic anticoagulation)"
+    ]
+  },
+  "discharge-audit": {
+    "task": 4,
+    "task_name": "Task 4 \u2014 Discharge-summary factual audit (CDI)",
+    "source": "edited",
+    "categories": [
+      "Per-claim verdict (supported / contradicted / unverifiable)",
+      "Citation of real timestamped conflicting value for contradictions",
+      "Absence of conforming real timestamped conflicting value for contradictions",
+      "CDI disposition per claim (amend / query provider / no action)"
+    ]
+  },
+  "renal-trajectory": {
+    "task": 5,
+    "task_name": "Task 5 \u2014 Longitudinal renal-function trajectory",
+    "source": "edited",
+    "categories": [
+      "baseline/peak/discharge creatinine with dates",
+      "reno-active medication changes",
+      "discharge-summary inflection points",
+      "weight/BMI trend and cystatin-C/eGFR with explicit absence note",
+      "age changes for creatinine clearance calculation",
+      "dehydration status due to medication-induced diarrhea"
+    ]
+  },
+  "sepsis-bundle": {
+    "task": 6,
+    "task_name": "Task 6 \u2014 ICU sepsis-bundle (SEP-1) compliance",
+    "source": "edited",
+    "categories": [
+      "ED arrival/triage time",
+      "Lactate administration timestamp",
+      "Blood-culture administration timestamp",
+      "Antibiotic administration timestamp",
+      "CXR radiological report",
+      "Vitals for shock determination",
+      "SOFA components"
+    ]
+  },
+  "readmission-30d": {
+    "task": 7,
+    "task_name": "Task 7 \u2014 30-day readmission occurrence",
+    "source": "edited",
+    "categories": [
+      "Index admittime/dischtime",
+      "All admittimes including icustays",
+      "Admission type/disposition",
+      "Index discharge summary",
+      "DRG severity",
+      "Imaging before Index discharge"
+    ]
+  },
+  "empiric-abx": {
+    "task": 8,
+    "task_name": "Task 8 \u2014 Empiric antibiotic appropriateness (stewardship)",
+    "source": "edited",
+    "categories": [
+      "Radiology CXR impression",
+      "Organism identification and full sensitivity panel",
+      "Empiric and narrow spectrum antibiotic agents with administration and stop timing",
+      "Time-to-antibiotic administration",
+      "Time-to-final-result",
+      "Pathogen versus contaminant determination"
+    ]
+  },
+  "med-reconciliation": {
+    "task": 9,
+    "task_name": "Task 9 \u2014 Medication reconciliation discrepancy",
+    "source": "base",
+    "categories": [
+      "Home medications at ED arrival",
+      "Active inpatient medication orders",
+      "Last-24 hours medication administrations",
+      "Discharge medication list",
+      "Documented rationale for medication changes"
+    ]
+  },
+  "dka-resolution": {
+    "task": 10,
+    "task_name": "Task 10 \u2014 DKA resolution & protocol adherence",
+    "source": "edited",
+    "categories": [
+      "Anion gap trajectory",
+      "Bicarbonate trajectory",
+      "pH trajectory",
+      "Glucose trajectory",
+      "Potassium trajectory",
+      "Insulin-drip administration times",
+      "Dextrose and SC-insulin timing",
+      "Initial fluid bolus",
+      "Potassium hold events",
+      "ICU charting and medical notation"
+    ]
+  },
+  "hfref-gdmt": {
+    "task": 11,
+    "task_name": "Task 11 \u2014 HFrEF guideline-directed therapy at discharge",
+    "source": "base",
+    "categories": [
+      "EF value documentation",
+      "Home medication status",
+      "Medication status during stay with reasons for changes",
+      "Medication status at discharge with drug and dose",
+      "Documented contraindications (K, creatinine, BP)"
+    ]
+  },
+  "stroke-time-targets": {
+    "task": 12,
+    "task_name": "Task 12 \u2014 Hyperacute stroke time-target audit",
+    "source": "base",
+    "categories": [
+      "ED arrival time",
+      "First head-imaging time",
+      "Neurology evaluation time",
+      "Thrombolytic administration time",
+      "LVO status",
+      "Thrombectomy puncture time",
+      "Documented reason for non-treatment or delay"
+    ]
+  },
+  "he-precipitant": {
+    "task": 13,
+    "task_name": "Task 13 \u2014 Hepatic encephalopathy precipitant identification",
+    "source": "edited",
+    "categories": [
+      "Ascitic fluid analysis for SBP",
+      "CBC and hemoglobin trend for GI bleed",
+      "Electrolyte levels (Na, K, HCO3)",
+      "Creatinine levels for AKI",
+      "Lactulose administration and adherence",
+      "Exposure to sedating medications",
+      "Note documentation",
+      "Alcohol level",
+      "Urine analysis and culture if obtained",
+      "Sputum culture if obtained",
+      "Drug screen if obtained"
+    ]
+  },
+  "overdose-disposition": {
+    "task": 14,
+    "task_name": "Task 14 \u2014 Opioid-overdose ED disposition & post-overdose care",
+    "source": "base",
+    "categories": [
+      "ED presentation details",
+      "Naloxone administration details",
+      "Observation duration and disposition",
+      "Buprenorphine and take-home naloxone provision",
+      "Addiction and social-work consultations",
+      "History of similar ED visits",
+      "Opioid-poisoning ED diagnosis"
+    ]
+  },
+  "icu-delirium": {
+    "task": 15,
+    "task_name": "Task 15 \u2014 ICU delirium screening & ABCDEF management",
+    "source": "edited",
+    "categories": [
+      "CAM-ICU/RASS charting",
+      "Sedative/analgesic infusion documentation",
+      "Pain charting",
+      "Deliriogenic medication administration",
+      "Mobility documentation",
+      "Spontaneous Awakening Trial (SAT) and Spontaneous Breathing Trial (SBT) documentation"
+    ]
+  },
+  "goals-of-care": {
+    "task": 16,
+    "task_name": "Task 16 \u2014 Goals-of-care documentation in serious illness",
+    "source": "base",
+    "categories": [
+      "Code-status documentation",
+      "Palliative-care and prognosis/goals documentation",
+      "Directive and hospice/comfort language",
+      "Serious-illness qualifying criteria",
+      "Patient capacity status",
+      "Explicit negative search result when concluding absence"
+    ]
+  },
+  "anticoag-reversal": {
+    "task": 17,
+    "task_name": "Task 17 \u2014 Anticoagulation reversal concordance",
+    "source": "base",
+    "categories": [
+      "Anticoagulant type and last-dose timing",
+      "INR/anti-Xa levels on arrival",
+      "Type and extent of bleeding",
+      "Reversal agents used, including dose and administration timing",
+      "Arrival-to-reversal interval",
+      "Era and availability context of treatments"
+    ]
+  },
+  "pneumonia-curb65": {
+    "task": 18,
+    "task_name": "Task 18 \u2014 Pneumonia severity\u2013disposition concordance (CURB-65)",
+    "source": "edited",
+    "categories": [
+      "Initial mental status assessment",
+      "Blood urea nitrogen (BUN) levels",
+      "Respiratory rate",
+      "Systolic and diastolic blood pressure",
+      "Patient age",
+      "Admission level of care",
+      "Justifying factors in clinical notes",
+      "Comorbidities from admission notes"
+    ]
+  },
+  "hyperkalemia-management": {
+    "task": 19,
+    "task_name": "Task 19 \u2014 Acute hyperkalemia management sequence",
+    "source": "base",
+    "categories": [
+      "Potassium timeline",
+      "Calcium levels (ionized/total)",
+      "IV calcium administration timing",
+      "Insulin administration timing",
+      "Dextrose administration timing",
+      "Albuterol administration timing",
+      "Bicarbonate administration timing",
+      "Diuretic administration timing",
+      "Binder administration timing",
+      "Dialysis administration timing",
+      "EKG results"
+    ]
+  },
+  "postop-complications": {
+    "task": 20,
+    "task_name": "Task 20 \u2014 Post-operative complication screen",
+    "source": "edited",
+    "categories": [
+      "Index procedure time",
+      "Post-operative laboratory results",
+      "Transfusion records",
+      "Imaging reports",
+      "Culture results",
+      "Arrhythmia and ventilation records",
+      "Complication timing relative to surgery",
+      "Pre-operative anaesthetic report",
+      "Peri-operative state reports"
+    ]
+  },
+  "transfusion-audit": {
+    "task": 21,
+    "task_name": "Task 21 \u2014 RBC transfusion indication audit",
+    "source": "edited",
+    "categories": [
+      "Transfusion times",
+      "Paired pre/post-Hgb levels",
+      "Clinical state during transfusion",
+      "Documented indication for transfusion",
+      "Total units transfused",
+      "Patient's notes peri-transfusion"
+    ]
+  },
+  "eol-goal-concordance": {
+    "task": 22,
+    "task_name": "Task 22 \u2014 End-of-life care goal-concordance",
+    "source": "base",
+    "categories": [
+      "Code-status documentation with times",
+      "Palliative-care involvement",
+      "Final 24/72-hour interventions with times",
+      "Symptom management",
+      "Place of death and family presence",
+      "Supporting note spans"
+    ]
+  },
+  "sepsis-source-abx": {
+    "task": 23,
+    "task_name": "Task 23 \u2014 Sepsis source identification & antibiotic evolution",
+    "source": "base",
+    "categories": [
+      "Initial source hypothesis",
+      "Clinical history record",
+      "Clinical examination record",
+      "Cultures and results",
+      "Source-identification imaging",
+      "Source-control procedures and times",
+      "Empiric regimen with changes, rationale, and administration/stop times",
+      "Final confirmed source and hospital day"
+    ]
+  },
+  "frequent-admitter": {
+    "task": 24,
+    "task_name": "Task 24 \u2014 Frequent-admitter driver synthesis",
+    "source": "edited",
+    "categories": [
+      "admission details (date, reason, length of stay)",
+      "discharge summaries",
+      "recurring diagnoses",
+      "social/behavioral drivers documentation",
+      "prior interventions and recommendations"
+    ]
+  },
+  "ams-workup": {
+    "task": 25,
+    "task_name": "Task 25 \u2014 Altered mental status workup completeness",
+    "source": "base",
+    "categories": [
+      "Laboratory results (glucose, Na, Ca, CBC, LFTs, ammonia, TSH)",
+      "Urinalysis and cultures",
+      "Toxicology screening",
+      "Blood gas analysis",
+      "EKG results",
+      "Head CT findings",
+      "Lumbar puncture and CSF microbiology",
+      "EEG results",
+      "Indication logic based on clinical presentation"
+    ]
+  }
+}

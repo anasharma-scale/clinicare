@@ -1,0 +1,42 @@
+# Process rubric for scenario-16 (goals-of-care), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Searched the admission notes for GOC/ACP elements."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Determined whether the patient satisfies a serious illness criteria OR that the patient's records do not permit a conclusion as to whether they satisfy a serious illness criteria."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Determined that a GOC/ACP element was absent OR that a GOC/ACP element was present OR that there was a documented and clinically appropriate reason for not conducting the GOC/ACP discussion."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Confirmed note-set completeness before asserting whether a GOC/ACP was or was not present."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Labeled No/not-addressed without confirming note completeness (should escalate if partial)."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Read GOC presence from a Z51.5 code alone without a note span."
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Counted a bare DNR/DNI code-status order as a GOC/ACP element without a quoted note span documenting the discussion or the change."

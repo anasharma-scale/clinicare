@@ -1,0 +1,43 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "hfref-gdmt"
+description = "HFrEF guideline-directed therapy at discharge"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For admission hadm_id={hadm_id} (subject_id={subject_id}) with HFrEF, was the patient discharged on guideline-concordant GDMT — every indicated pillar present, or a documented contraindication for any omission? Give a 0–4 pillar scorecard citing the discharge summary.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Across the four GDMT pillars (ACEi/ARB/ARNI, beta-blocker, MRA, SGLT2 inhibitor), was each either on the discharge list or omitted with a documented contraindication?'''
+
+inclusion_criteria = [
+  "All four pillars (ACEi/ARB/ARNI, beta-blocker, MRA, SGLT2 inhibitor) are present on the discharge list; OR",
+  "Any omitted pillar (ACEi/ARB/ARNI, beta-blocker, MRA, SGLT2 inhibitor) has a documented contraindication and EITHER: (a) an appropriate alternative has been prescribed instead (such as hydralazine plus isosorbide dinitrate where an ACEi/ARB/ARNI is contraindicated); OR (b) a reason for not prescribing that alternative has been documented.",
+]  # → YES
+
+exclusion_criteria = [
+  "Any of the four pillars (ACEi/ARB/ARNI, beta-blocker, MRA, SGLT2 inhibitor) is omitted from the discharge list AND",
+  "there is no documented reason for that omission, OR there is a documented reason but no appropriate alternative was prescribed and no clinically appropriate reason for omitting the alternative was recorded.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "HFrEF is not established from an acceptable source: either no EF is documented, OR the most recent echocardiogram/note EF is preserved (does not show reduced systolic function) and so does not support the HFrEF premise. EF must come from the echocardiogram/note value, not an ICD code — a systolic-HF ICD code alongside a documented preserved EF does NOT establish HFrEF.",
+  "No structured discharge medication list is available.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = []  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "EF (echo/note value); per-pillar status on home meds, during stay (held/stopped + reason), and at discharge (drug + dose); documented contraindications (K, creatinine, BP).",
+]
+
+grounding_requirements = '''
+Required sources: MIMIC-IV-Note discharge + echo report (EF value); hosp/prescriptions + emar (home/inpatient/discharge meds); labevents (K, creatinine); chartevents (BP).
+Required fields: EF value; drug per pillar + dose + discharge-list membership; held/stop reasons; K/creatinine/BP for contraindication checks.
+Required timing logic: home → inpatient hold/stop → discharge; contraindication labs around the omission decision.
+Authoritative public sources
+- 2022 AHA/ACC/HFSA Guideline for the Management of Heart Failure (Heidenreich et al., Circulation 2022).
+'''

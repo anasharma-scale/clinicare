@@ -1,0 +1,47 @@
+# Process rubric for scenario-15 (icu-delirium), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Identified patient's CAM-ICU/RASS charting in chartevents, and established the screening cadence against the expected frequency — CAM-ICU at least twice per day and RASS every 4 h (abcdef-bundle-delirium-bmjopen-2021)."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Determined whether patient underwent the requisite delirium screens — CAM-ICU at least twice per day, RASS every 4 h — OR whether there was a documented and clinically appropriate reason for not undertaking delirium screens."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Determined whether the patient was managed per the ABCDEF critical-care bundle (pain management, sedation lightening, sedation choice, delirium monitoring, early mobility, family engagement) OR whether there was a documented and clinically appropriate reason for not complying."
+
+[[rubric]]
+id = "D4"
+weight = "+1"
+title = "Reviewed patient's medication chart for deliriogenic agent exposure."
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Determined that deliriogenic agents were not started or stopped OR that there was a documented and clinically appropriate reason for doing otherwise."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Asserted absence of delirium screening without querying chartevents for the CAM-ICU/RASS itemids."
+
+[[rubric]]
+id = "N2"
+weight = "-1"
+title = "Faulted clinically justified deliriogenic-agent use."
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Read delirium status from an ICD code instead of the screen."

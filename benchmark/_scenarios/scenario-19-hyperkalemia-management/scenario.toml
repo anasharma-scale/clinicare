@@ -1,0 +1,44 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "hyperkalemia-management"
+description = "Acute hyperkalemia management sequence"
+params = ["subject_id", "hadm_id", "k_anchor_time"]
+prompt = """
+For subject_id={subject_id} (hadm_id={hadm_id}) with K ≥ 5.5 anchored at {k_anchor_time}, was the first 4 h of management protocol-concordant with guideline-directed acute-hyperkalemia care? Give the intervention timing and the 1/2/4-h potassium response.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''In the 4 h after the first K ≥ 5.5, did management follow the standard sequence (IV calcium for membrane stabilization when severe → insulin+dextrose / albuterol / bicarbonate to shift → diuretic / binder / dialysis to eliminate) without a major deviation, with potassium falling appropriately?'''
+
+inclusion_criteria = [
+  "Severe hyperkalemia (K ≥ 6.5) received IV calcium; ≥1 shift maneuver given (insulin WITH dextrose, albuterol, bicarbonate); no major deviation; post-treatment K trends down.",
+  "Moderate hyperkalemia (5.5 ≤ K < 6.5) was managed appropriately for its severity — a shift and/or elimination maneuver given as indicated (IV calcium is NOT required absent ECG changes); no major deviation; post-treatment K trends down.",
+]  # → YES
+
+exclusion_criteria = [
+  "≥1 major deviation: severe hyperkalemia (K ≥ 6.5) without calcium; insulin without dextrose in a non-hyperglycemic patient (any severity); potassium binder as monotherapy for severe hyperkalemia; OR a maneuver was given but potassium did not respond and no escalation or documented rationale followed.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "Intervention timing not recoverable in the structured streams, or administrations captured only in emar (floor) vs inputevents (ICU) such that the sequence can't be reconstructed.",
+  "The anchor K event cannot be uniquely fixed in a recurrent-hyperkalemia stay.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = []  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Potassium timeline (anchor + 1/2/4-h); ionized/total calcium; IV calcium, insulin, dextrose, albuterol, bicarbonate, diuretic, binder, dialysis ADMINISTRATION timing; any EKG.",
+]
+
+grounding_requirements = '''
+Required sources: hosp/labevents (K 50971/50822, Ca 50893/50808, glucose 50931); icu/inputevents (calcium gluconate 221456; calcium chloride — resolve by label from d_items rather than a hard-coded itemid, which is not established for this dataset; UKKA 16.2b makes the distinction load-bearing (chloride in the resuscitation setting, gluconate otherwise); insulin 223258; dextrose 220952; bicarbonate 220995; furosemide 221794) + emar (albuterol, binders, floor administrations); chartevents/notes (EKG).
+Required fields: K value+charttime; calcium type/administration time; insulin+dextrose pairing; albuterol/bicarb/diuretic/binder/dialysis timing; EKG findings.
+Required timing logic: 4-h window from <k_anchor_time>; time-to-calcium; time-to-first-shift; K at 1/2/4 h — all by administration time, anchored on the SPECIFIED K event.
+Authoritative public sources
+- UK Kidney Association Clinical Practice Guideline: Treatment of Acute Hyperkalaemia in Adults (2023)
+- AHA ACLS (severe hyperkalemia)
+- NICE BNF: Treatment of hyperkalemia
+'''

@@ -1,0 +1,43 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "postop-complications"
+description = "Post-operative complication screen"
+params = ["subject_id", "hadm_id", "procedure_time"]
+prompt = """
+For subject_id={subject_id} (hadm_id={hadm_id}) after the major procedure at {procedure_time}, did the patient develop ≥1 post-operative complication? The standard complications are: ileus, surgical-site infection, VTE, either (a) anastomotic leak or (b) peritonitis requiring drainage or re-operation, bleeding requiring transfusion, AKI (KDIGO), post-op pneumonia/respiratory failure, or arrhythmia requiring intervention. A finding counts only if it is new, arises after the operation, and is attributable to the index major procedure — the presenting/admitting condition does not count. For the AKI element, the pre-operative baseline must be a creatinine from this admission before the operation; do not substitute a post-discharge or later-admission value. Where no such value exists, or the candidate pre-operative values fluctuate materially, there is no baseline to measure against and the AKI element does not resolve. For each standard complication, state present/absent with the supporting evidence and timing relative to surgery.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''After the index major procedure, is ≥1 standard post-operative complication present — ileus, surgical-site infection, VTE, either (a) anastomotic leak or (b) peritonitis requiring drainage or re-operation, bleeding requiring transfusion, AKI (KDIGO), post-op pneumonia/respiratory failure, or arrhythmia requiring intervention — supported by lab/imaging/note evidence, and counting only findings that are new, arise after the operation, and are attributable to the index procedure (not the presenting/admitting condition)?'''
+
+inclusion_criteria = [
+  "≥1 standard complication supported by OBJECTIVE evidence (lab trend, imaging/radiology impression, or note span) that is new, arises after the operation, and is attributable to the index major procedure (not the presenting/admitting condition), each judged against its standard definition (SSI per CDC NHSN; AKI per KDIGO) — verified independently of any ICD code.",
+]  # → YES
+
+exclusion_criteria = [
+  "A complete screen across the standard complications finds none present post-operatively (verified against objective data).",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "Required streams for the complication set (labs, imaging reports, procedure timing) are incomplete, so the screen can't be completed.",
+  "Post-op AKI cannot be assessed because the pre-op creatinine baseline is missing or labile; a coded complication cannot be confirmed against objective data.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = []  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Index procedure time; post-op labs (creatinine, Hgb, WBC); transfusions; imaging reports; culture results; arrhythmia/vent records; note spans; each complication's timing vs surgery.",
+]
+
+grounding_requirements = '''
+Required sources: hosp/procedures_icd + icu/procedureevents (index procedure); hosp/labevents (creatinine, Hgb, WBC); icu/inputevents (transfusions); microbiologyevents (SSI); MIMIC-IV-Note radiology + discharge; diagnoses_icd (corroboration only).
+Required fields: procedure code+time; post-op lab trends; transfusion events; culture/imaging findings; complication timing relative to surgery.
+Required timing logic: all complications dated relative to <procedure_time>; AKI by KDIGO around surgery (pre-op baseline vs post-op peak).
+Corroborating ICD codes for the peritonitis complication (corroboration only, NOT the primary basis): K65.0 (generalized acute peritonitis), K65.1 (peritoneal abscess), K65.8/K65.9 (other/unspecified peritonitis), K91.89 (other postprocedural complications and disorders of the digestive system).
+Authoritative public sources
+- Clavien-Dindo classification of surgical complications (Dindo et al., Ann Surg 2004)
+- CDC NHSN surgical site infection (SSI) definitions
+'''

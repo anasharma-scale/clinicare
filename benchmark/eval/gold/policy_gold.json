@@ -1,0 +1,240 @@
+[
+ {
+  "scenario_id": "advanced-imaging",
+  "title": "Advanced cross-sectional imaging receipt (ICU stay)",
+  "policy_docs": [
+   "imaging-of-icu-patients-2019.md",
+   "cms-appropriate-use-criteria-program.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "post-ct-aki",
+  "title": "Post-CT contrast-associated AKI",
+  "policy_docs": [
+   "ACR-Manual-on-Contrast-Media.md",
+   "davenport-et-al-2020-use-of-intravenous-iodinated-contrast-media-in-patients-with-kidney-disease-consensus-statements.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "pe-workup",
+  "title": "Pulmonary embolism workup",
+  "policy_docs": [
+   "creager-et-al-2026-2026-aha-acc-accp-acep-chest-scai-shm-sir-svm-svn-guideline-for-the-evaluation-and-management-of.md",
+   "pulmonary-embolism-guideline-comparison-key-points-american-college-of-cardiolog.md",
+   "british-thoracic-society-guidelines-acute-pulmonary-embolism.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "discharge-audit",
+  "title": "Discharge documentation / compliant-query audit",
+  "policy_docs": [
+   "acdis-ahima-compliant-query-practice-2022.md",
+   "acdis-code-of-ethics.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "renal-trajectory",
+  "title": "CKD renal trajectory",
+  "policy_docs": [
+   "nkf-asn-2021-egfr-task-force.md",
+   "kdigo-2024-ckd-guideline.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "sepsis-bundle",
+  "title": "SEP-1 sepsis-bundle compliance",
+  "policy_docs": [
+   "caring-for-patients-with-sepsis.md",
+   "surviving-sepsis-campaign-international-guidelines-for.md",
+   "BPCIAdvanced_AltFS_MY4_Sepsis_08112020_508.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "readmission-30d",
+  "title": "30-day readmission",
+  "policy_docs": [
+   "cms-hwr-readmission-methodology.md",
+   "cms-hrrp-planned-readmission-algorithm.md",
+   "hospital-readmissions-reduction-program.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "empiric-abx",
+  "title": "Empiric antibiotic stewardship",
+  "policy_docs": [
+   "idsa-shea-antibiotic-stewardship-2016.md",
+   "cdc-core-elements-hospital-antibiotic-stewardship.md",
+   "antibiotic-use-in-the-united-states.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "med-reconciliation",
+  "title": "Medication reconciliation",
+  "policy_docs": [
+   "hap-npsg-chapter-2025.md",
+   "who-high5s-medication-reconciliation-sop.md"
+  ],
+  "notes": "hap-npsg-chapter-2025.md = Joint Commission NPSG (incl. NPSG.03.06.01 med rec)."
+ },
+ {
+  "scenario_id": "dka-resolution",
+  "title": "DKA resolution",
+  "policy_docs": [
+   "statpearls-adult-dka-2025.md",
+   "dci240032.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "hfref-gdmt",
+  "title": "HFrEF guideline-directed medical therapy",
+  "policy_docs": [
+   "heidenreich-et-al-2022-2022-aha-acc-hfsa-guideline-for-the-management-of-heart-failure-a-report-of-the-american-college.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "stroke-time-targets",
+  "title": "Acute stroke time targets",
+  "policy_docs": [
+   "aha-asa-acute-ischemic-stroke-2019.md",
+   "aha-target-stroke-fact-sheet.md",
+   "nice-ng128-stroke-tia.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "he-precipitant",
+  "title": "Hepatic encephalopathy precipitant",
+  "policy_docs": [
+   "aasld-easl-hepatic-encephalopathy-2014.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "overdose-disposition",
+  "title": "Opioid overdose disposition",
+  "policy_docs": [
+   "samhsa-tip63-moud.md",
+   "acep-ed-naloxone-distribution.md",
+   "cdc-naloxone-distribution-eval.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "icu-delirium",
+  "title": "ICU delirium / ABCDEF bundle",
+  "policy_docs": [
+   "abcdef-bundle-critical-care.md",
+   "abcdef-bundle-delirium-bmjopen-2021.md",
+   "clinical-practice-guidelines-for-the-prevention-and.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "goals-of-care",
+  "title": "Goals of care",
+  "policy_docs": [
+   "ncp-palliative-care-guidelines-4th-ed.md",
+   "5.1.md",
+   "hap-npsg-chapter-2025.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "anticoag-reversal",
+  "title": "Anticoagulation reversal",
+  "policy_docs": [
+   "acc-2020-bleeding-oral-anticoagulants-ecdp.md",
+   "blooda-30609.md",
+   "FINAL_COPY_COAG.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "pneumonia-curb65",
+  "title": "Pneumonia severity (CURB-65)",
+  "policy_docs": [
+   "bmj-community-acquired-pneumonia.md",
+   "curb65-electronic-decision-support-2011.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "hyperkalemia-management",
+  "title": "Acute hyperkalemia management",
+  "policy_docs": [
+   "ukka-acute-hyperkalaemia-2023.md",
+   "aha-acls-part8-advanced-challenges-resuscitation.md"
+  ],
+  "notes": "REVIEW: 'NICE BNF hyperkalemia' has no clear corpus match."
+ },
+ {
+  "scenario_id": "postop-complications",
+  "title": "Postoperative complications",
+  "policy_docs": [
+   "clavien-dindo-surgical-complications-2004.md",
+   "cdc-nhsn-ssi-definitions.md",
+   "nihms-438029.md",
+   "postop-complications-challenges-solutions-cureus-2023.md"
+  ],
+  "notes": "Clavien-Dindo 2004 = complication severity grading (Grade I-V); CDC NHSN = SSI definitions (superficial/deep/organ-space, 30/90-day windows). AKI graded via KDIGO; pneumonia via IDSA/NHSN."
+ },
+ {
+  "scenario_id": "transfusion-audit",
+  "title": "Transfusion appropriateness audit",
+  "policy_docs": [
+   "aabb-rbc-transfusion-thresholds-2023.md"
+  ],
+  "notes": "Review: Red Blood Cell Transfusion document not found in corpus. Case names two AABB 2023 items; corpus has one AABB RBC-thresholds doc."
+ },
+ {
+  "scenario_id": "eol-goal-concordance",
+  "title": "End-of-life goal concordance",
+  "policy_docs": [
+   "ncp-palliative-care-guidelines-4th-ed.md",
+   "nice-ng142-end-of-life-care-service-delivery.md",
+   "nice-ng31-care-of-dying-adults.md",
+   "PIIS0885392415000731.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "sepsis-source-abx",
+  "title": "Sepsis source control / antibiotics",
+  "policy_docs": [
+   "cdc-hospital-sepsis-core-elements.md",
+   "surviving-sepsis-campaign-international-guidelines-for.md",
+   "idsa-antimicrobial-guidance.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "frequent-admitter",
+  "title": "Frequent admitter / care transitions",
+  "policy_docs": [
+   "cms-reducing-disparities-in-readmissions-2024.md",
+   "statpearls-reducing-readmissions-2024.md",
+   "care-transitions.md",
+   "cms-cctp-fact-sheet.md"
+  ],
+  "notes": ""
+ },
+ {
+  "scenario_id": "ams-workup",
+  "title": "Altered mental status workup",
+  "policy_docs": [
+   "PIIS0196064417300707.md",
+   "altered-mental-status-inpatient-delirium.md"
+  ],
+  "notes": ""
+ }
+]

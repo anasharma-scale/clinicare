@@ -1,0 +1,52 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "sepsis-bundle"
+description = "ICU sepsis-bundle (SEP-1) compliance"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For MICU patient subject_id={subject_id}, hadm_id={hadm_id} admitted in the audit window, was the SEP-1 sepsis bundle completed within the required time windows? Time windows are anchored to ED triage time; that anchor holds only where care for this episode began at this encounter. An element completed out-of-window, or omitted, still passes if there is a documented, clinically appropriate justification arising in this encounter. Decide which bundle elements apply and cite the timestamps you used.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''For a MICU patient meeting severe-sepsis/septic-shock recognition, were the time-anchored SEP-1 bundle elements (lactate, blood cultures before antibiotics, broad-spectrum antibiotics, and — if hypotensive/lactate≥4 — 30 mL/kg crystalloid and vasopressors) completed within their windows, anchored to ED triage time?'''
+
+inclusion_criteria = [
+  "For a patient presenting with severe sepsis or septic shock, all applicable 3-hour elements completed in-window: lactate drawn, blood cultures drawn before antibiotics, broad-spectrum empiric antibiotics administered within 3 h of ED triage; and where shock/lactate≥4, 30 mL/kg crystalloid started AND",
+  "Triggered 6-hour elements (repeat lactate if initially elevated; vasopressors for fluid-refractory hypotension) completed in-window OR",
+  "An element is completed out-of-window, or is not completed at all, but carries a documented and clinically appropriate justification (e.g. antibiotics held for a documented reason).",
+]  # → YES
+
+exclusion_criteria = [
+  "For a patient presenting with severe sepsis or septic shock, one or more applicable bundle element was not performed or was performed out-of-window (e.g. antibiotics administered > 3 h after triage; cultures drawn after antibiotics) OR",
+  "One or more triggered 6-hour elements (repeat lactate if initially elevated; vasopressors for fluid-refractory hypotension) was not completed or was completed out-of-window AND",
+  "There was no documented and clinically appropriate reason for why that element was either not completed or was completed out-of-window.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "The admission does not reflect severe-sepsis/septic-shock recognition (no sepsis/septic-shock diagnosis or documented recognition; the infection was ruled out or the encounter was elective/observation) — SEP-1 bundle grading does not apply — out of scope.",
+  "No ED encounter time (or hospital transfer time) is available thereby preventing calculation of treatment windows.",
+  "Care for this septic episode began before this encounter — for example the patient arrived as a transfer already receiving antibiotics, fluids or vasopressors — and the earlier facility's presentation time, initial lactate and initial administration times are not in this dataset, so time zero cannot be established. The prior course may be evidenced only in the discharge summary narrative rather than in admission_location, so read the narrative before concluding the patient presented here first.",
+  "Antibiotic ADMINISTRATION time is undocumented, or only an order time is available and cannot be reconciled to an administration time.",
+  "Order records suggest that an investigation element (lactate, cultures) may have been performed but there is no corresponding implementation or result record for that investigation element.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "Two or more ED encounters for the same septic episode are recorded in this dataset, so more than one defensible time zero exists and the bundle windows differ depending on which is chosen. The competing anchors are both present — that is what makes this ambiguity rather than lack of data: where the earlier anchor lies outside this dataset (a transfer in from another facility), the lack-of-data criterion above governs instead.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "ED arrival/triage time (MIMIC-IV-ED edstays.intime); lactate, blood-culture, and antibiotic ADMINISTRATION timestamps (emar, not order time); CXR radiological report; vitals for shock determination; SOFA components.",
+]
+
+grounding_requirements = '''
+Required sources: MIMIC-IV-ED edstays.csv.gz (intime = time-zero, disposition) + triage.csv.gz; hosp/emar.csv.gz (antibiotic ADMINISTRATION) + poe.csv.gz (orders); hosp/labevents.csv.gz (lactate 50813); hosp/microbiologyevents.csv.gz (blood cultures); icu/chartevents.csv.gz (vitals/SOFA); MIMIC-IV-Note radiology.csv.gz (CXR).
+Required fields: edstays.intime; lactate value+charttime; culture spec_type+charttime; antibiotic drug + ADMINISTRATION time; MAP/SBP; ordering of antibiotic vs culture vs triage.
+Required timing logic: All windows anchored to ED arrival; cultures precede antibiotics; antibiotics within 3 h (by administration time); repeat lactate within 6 h.
+Authoritative public sources
+- Center for Medicare & Medicaid Services, Severe Sepsis and Septic Shock: Management Bundle Measure (NQF #0500)
+- Centre for Disease Control, Caring for patients with sepsis (2025) (cdc.gov/sepsis)
+- Society of Critical Care Medicine, Surviving Sepsis Campaign (2026) (sccm.org/clinical-resources)
+'''

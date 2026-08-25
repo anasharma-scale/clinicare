@@ -1,0 +1,49 @@
+[project]
+name = "mimic-tools"
+version = "0.1.0"
+description = "Canonical MIMIC-IV tool surface — shared by the contributor console (streamlit_app/api) and the agent harness."
+# 3.11, NOT the 3.12 the rest of the workspace requires: this is the only package installed
+# INSIDE the trial image (python:3.11-slim), so raising this floor breaks the image build. It
+# never imports harbor, which is what forces 3.12 on the host side.
+requires-python = ">=3.11"
+# The kernel (tools/db/tool_registry) imports no third-party packages at import time —
+# duckdb and bigquery are both lazy. Each flow installs only the extra it needs.
+dependencies = []
+
+[project.optional-dependencies]
+# Every constraint carries an UPPER bound. The trial image is built with a fresh resolve
+# (`pip install ".[mcp,api]"` in _template/environment/Dockerfile — no lockfile), so an
+# open floor means any rebuild silently adopts the newest release. That is not theoretical:
+# mcp 2.0.0 renamed Tool.inputSchema -> Tool.input_schema, and because editing this package
+# changes the content-hash image tag, the next rebuild picked it up and every trial in a run
+# died with "connection closed: initialize response" — the MCP server crashed during
+# initialize, so agents saw no tools and answered "Indeterminate - lack of data". Raise a
+# bound deliberately, with a rebuild + `mcp_server.py --selftest`, never by omission.
+#
+# The duckdb FLOOR is a security constraint, not a convenience one: 1.2.0 is the first release
+# with `allowed_directories`, which db._restrict_duck_filesystem needs to stop run_sql from
+# reading arbitrary files in the credentialed sidecar. Below that the connection cannot be
+# confined and db.py refuses to build one.
+duckdb = ["duckdb>=1.2.0,<2"]
+bigquery = ["google-cloud-bigquery>=3.0.0,<4"]
+# Agent-facing stdio MCP server (mcp_server.py) over the DuckDB backend — the form
+# baked into the Harbor trial image. mcp brings the protocol; duckdb the data backend.
+# mcp is held at <2 because the code reads the camelCase Tool.inputSchema of the 1.x line.
+mcp = ["mcp>=1.0.0,<2", "duckdb>=1.2.0,<2"]
+# The HTTP tool surface the sidecar serves. fastapi/uvicorn are still 0.x,
+# so <1 only guards the eventual 1.0 rewrite — it cannot stop a breaking 0.x minor. The
+# durable fix for that is building from the lockfile rather than resolving at build time.
+api = [
+    "fastapi>=0.110,<1",
+    "uvicorn[standard]>=0.29,<1",
+    "google-cloud-bigquery>=3.0.0,<4",
+]
+# Local contributor console.
+ui = ["streamlit>=1.30", "pandas>=2.0.0,<3", "duckdb>=1.2.0,<2"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mimic_tools"]

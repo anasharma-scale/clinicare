@@ -1,0 +1,53 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "empiric-abx"
+description = "Empiric antibiotic appropriateness (stewardship)"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For ICU patient subject_id={subject_id}, hadm_id={hadm_id} with a chest X-ray and a positive blood culture, was the empiric antibiotic choice appropriate — active against the organism on the susceptibility panel and de-escalated once a narrower option was available? If the organism recovered is plausibly a contaminant rather than a true pathogen, the appropriateness question does not resolve — say so rather than grading the regimen against it.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Was the empiric regimen around the culture draw active against the cultured organism's susceptibility panel, and was a broad agent narrowed within 48 h once a susceptible narrower-spectrum option was reported?'''
+
+inclusion_criteria = [
+  "Where a patient has been started on a single antibiotic empirically, that agent was reported as SUSCEPTIBLE on the panel for the growing organism.",
+  "Where a patient has been started on more than one antibiotic empirically, at least one of those agents was reported as SUSCEPTIBLE on the panel for the growing organism.",
+  "Where a patient was started on a single antibiotic empirically, that antibiotic was de-escalated within 48 hours of a narrower susceptibility becoming available (or continued with a documented reason).",
+  "Where a patient was started on more than one antibiotic empirically, those antibiotics were de-escalated within 48 hours of a narrower susceptibility becoming available (or continued with a documented reason).",
+]  # → YES
+
+exclusion_criteria = [
+  "Where a patient has been started on a single antibiotic empirically, that agent was reported as RESISTANT on the panel.",
+  "Where a patient has been started on more than one antibiotic empirically, all those agents were reported as RESISTANT on the panel.",
+  "Where a patient has been started on a single antibiotic empirically, that agent was continued more than 48 hours after a narrower susceptibility became available (without a documented reason).",
+  "Where a patient has been started on more than one antibiotic empirically, any of those agents were continued more than 48 hours after a narrower susceptibility became available (without a documented reason).",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "No susceptibility panel was carried out (unless there are documented reasons for why it was carried out, such as patient refusal, financial constraints, supervening emergency).",
+  "There was no organism growth on culture panel.",
+  "Antibiotic administration/stop timing relative to the culture result are not determinable, or only order (not administration/stop) times are available.",
+  "Detail regarding antibiotics such as empirical or narrow spectrum activity not available.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "The organism growth was plausibly a contaminant.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Radiology CXR impression; organism + full sensitivity panel (S/I/R); empiric antibiotic agent(s), narrow spectrum antibiotic agent(s) and ADMINISTRATION/stop timing; time-to-antibiotic; time-to-final-result; pathogen-vs-contaminant signal (number of positive bottles/sets).",
+]
+
+grounding_requirements = '''
+Required sources: hosp/microbiologyevents.csv.gz (org_name, ab_name, interpretation, charttime, spec/bottle); hosp/emar.csv.gz + prescriptions.csv.gz (antibiotic(s) administration/stop); MIMIC-IV-Note radiology.csv.gz (CXR).
+Required fields: organism, antibiotic(s), interpretation (S/I/R); antibiotic administration start/stop; culture draw and final-result times; positive-bottle/set count.
+Required timing logic: Empiric window around culture draw; de-escalation measured ≤ 48 h after the narrower susceptibility report, by administration/stop time (not order time).
+Authoritative public sources
+- IDSA/SHEA Implementing an Antibiotic Stewardship Program (Barlam et al., Clin Infect Dis 2016); CDC Core Elements of Hospital Antibiotic Stewardship.
+- Antibiotic Stewardship Resource Bundles (2026) CDC Antibiotic Prescribing and Use [cdc.gov/antibiotic-use](http://cdc.gov/antibiotic-use](http://cdc.gov/antibiotic-use))
+- Antibiotic Use in the United States (2025) Antibiotic Prescribing and Use \cdc.gov/antibiotic-use\
+'''

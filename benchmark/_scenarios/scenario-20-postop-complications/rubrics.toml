@@ -1,0 +1,52 @@
+# Process rubric for scenario-20 (postop-complications), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Established the surgical/procedural context and distinguished the index procedure from the presenting/admitting condition."
+
+[[rubric]]
+id = "D2"
+weight = "+1"
+title = "Obtained the patient's pre-operative evaluation or stated that it was not available"
+
+[[rubric]]
+id = "D3"
+weight = "+1"
+title = "Obtained the index procedure record (procedure code + time from procedures_icd/procedureevents) or stated that it was not available."
+
+[[rubric]]
+id = "D4"
+weight = "+1"
+title = "Obtained patient's post-operative records or stated that they are not available"
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Determined whether or not patient had a post-operative complication or stated that it is not possible to determine on available evidence"
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Counted a complication from an ICD code without objective confirmation."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Called post-op AKI without a valid pre-op creatinine baseline."
+
+[[rubric]]
+id = "N3"
+weight = "-1"
+title = "Counted expected post-op physiology as a complication without meeting the spec's severity qualifiers (e.g., bleeding requiring transfusion, arrhythmia requiring intervention, AKI by KDIGO)."
+
+[[rubric]]
+id = "N4"
+weight = "-2"
+title = "Asserted 'no complications' without verifying that each complication class named in the spec was screened."

@@ -1,0 +1,57 @@
+# Process rubric for scenario-09 (med-reconciliation), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Pulled the source for home medication (medrecon.csv.gz)."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Pulled the source for inpatient medication orders/administration (prescriptions.csv.gz, emar.csv.gz, pharmacy.csv.gz)."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Read the discharge medication list from discharge.csv.gz, or escalated to Indeterminate where no structured discharge list is available."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Reconciled each chronic med across the three sources."
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Distinguished a documented intentional change from an unintended omission."
+
+[[rubric]]
+id = "D7"
+weight = "+1"
+title = "Used emar.csv.gz administration times for the last-24-h comparison."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Flagged a documented intentional change as a discrepancy."
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Read the discharge regimen from discharge.csv.gz prose only, without reconciling the structured prescriptions.csv.gz list."
+
+[[rubric]]
+id = "N4"
+weight = "-2"
+title = "Asserted Yes/No without verifying that both the ED medrecon list and the structured discharge medication list are present."
+
+[[rubric]]
+id = "N5"
+weight = "-2"
+title = "Rested the verdict on a difference whose intent the record does not establish — returning Yes where the only discrepancy supporting it is one that should have been escalated as indeterminate-intent. Noting such an item alongside an independently sufficient discrepancy is NOT this error."

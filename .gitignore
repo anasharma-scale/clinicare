@@ -1,0 +1,61 @@
+# ── Credentialed data (MIMIC wall) ───────────────────────────────────────────
+# The cohort bundle (full750.csv / dev148.csv) is distributed separately to PhysioNet-
+# credentialed users and must NEVER be committed here. This repo currently lives inside the
+# `models` monorepo, whose root .gitignore happens to ignore *.csv — that incidental
+# protection DISAPPEARS when this tree is extracted to a standalone public repo, so the
+# cohort paths are named explicitly below rather than relying on it.
+data/
+**/full750.csv
+**/dev148.csv
+**/patients.csv
+**/silver_patients.csv
+
+# A local MIMIC copy or its converted Parquet, if someone points the tools at an in-tree path.
+mimic-data/
+*.parquet
+*.csv.gz
+
+# ── Policy corpus ────────────────────────────────────────────────────────────
+# benchmark/corpus/ is ASSEMBLED at runtime by construction/scripts/acquire_corpus.py and is
+# never repo content: most of it is third-party text under publisher terms, and anything that
+# lands in git history stays there even after deletion. Keep this rule absolute — do not add
+# negations for individual documents.
+benchmark/corpus/*
+!benchmark/corpus/README.md
+
+# Tracked instead: the acquisition manifest, and the subset that is US government work and so
+# carries no redistribution restriction. corpus_manifest.csv needs an explicit negation because
+# the monorepo root ignores *.csv (see the note at the top of this file).
+!benchmark/corpus_manifest.csv
+
+# Where acquire_corpus.py expects hand-downloaded publisher PDFs/EPUBs. Same rule as the corpus
+# itself: these are third-party files under publisher terms and must never reach git history.
+corpus-inbox/
+corpus-build/
+
+# ── Secrets ──────────────────────────────────────────────────────────────────
+.env
+
+# ── Generated task dirs (regenerable via benchmark/scripts/build_tasks.py) ───
+tasks/
+tasks_*/
+
+# ── Run outputs ──────────────────────────────────────────────────────────────
+jobs/
+.trajectories/
+
+# ── Local caches (DuckDB views, the note-module cache, tool caches) ──────────
+.cache/
+
+# ── Python ───────────────────────────────────────────────────────────────────
+.venv/
+**/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# ── Editor / OS ──────────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,45 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "frequent-admitter"
+description = "Frequent-admitter driver synthesis"
+params = ["subject_id", "window_start", "window_end"]
+prompt = """
+For subject_id={subject_id} admitted repeatedly between {window_start} and {window_end}, is there a recurring, intervenable driver behind the readmissions? An "intervenable driver" means one of: medication non-adherence, substance use, housing instability, mental-health issues, follow-up gaps, or caregiver issues — a purely medical/surgical/anatomic cause does not count. A "Yes" also requires that the admissions' diagnoses recur around a common theme. Walk through each admission and cite the documented drivers, including any recurring recommendations that appear un-actioned.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Across the admissions in the window, do diagnoses recur around a common theme AND do notes document ≥1 intervenable driver (medication non-adherence, substance use, housing instability, mental health, follow-up gaps, caregiver issues) — ideally with the same recommendation recurring un-actioned?'''
+
+inclusion_criteria = [
+  "There was a recurring diagnosis or diagnoses as documented in the patient's notes or discharge summary AND",
+  "The patient's notes or discharge summary explicitly or implicitly documented one or more specific intervenable drivers of the recurring admission (medication non-adherence, substance use, housing instability, mental health, follow-up gaps, caregiver issues).",
+]  # → YES
+
+exclusion_criteria = [
+  "There was no recurring diagnosis as documented in the patient's medical notes or discharge summary OR",
+  "The patient's notes or discharge summary do not explicitly or implicitly document a specific intervenable driver of readmission.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "The patient notes across the admissions are unavailable or incomplete, so recurring diagnoses or drivers of readmission cannot be assessed.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = []  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Every admission in the window (date, reason, LOS), including discharge summaries; recurring diagnoses; note spans on social/behavioral drivers; prior interventions tried (case management, SW, palliative, referrals) and recurrence of recommendations.",
+]
+
+grounding_requirements = '''
+Required sources: hosp/admissions (enumerate admissions in window); diagnoses_icd (recurring dx themes); MIMIC-IV-Note discharge (drivers, interventions); services/transfers.
+Required fields: admittime/dischtime per hadm; recurring ICD themes; note spans on adherence/substance/housing/MH/follow-up; documented interventions + recurrence.
+Required timing logic: all admissions within [window_start, window_end]; track recommendation recurrence across successive discharges.
+Authoritative public sources
+- Centre for Medicine and Medicaid Service (2024) Guide for reducing disparities in readmissions (cms.gov/about-cms)
+- Reducing hospital readmissions (2024) National Library of Clinical Medicine (ncbi.nlm.nih.gov)
+- AHRQ care-transitions / care-management evidence
+- CMS Community-based Care Transitions guidance (no single binding guideline — driver taxonomy is doctor-defined).
+'''

@@ -1,0 +1,46 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "pneumonia-curb65"
+description = "Pneumonia severity–disposition concordance (CURB-65)"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For pneumonia admission hadm_id={hadm_id} (subject_id={subject_id}), does the disposition (ward / step-down / ICU) match the admission CURB-65 severity? Show the CURB-65 components and the disposition.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Computing CURB-65 at admission (Confusion, BUN > 19 mg/dL, RR ≥ 30, SBP < 90 or DBP ≤ 60, age ≥ 65) from the first admission values, does the level of care match the score under the standard bands — 0-1 low risk (community/OP or ward), 2 intermediate risk (ward), 3-5 high risk (ward, with 4-5 warranting ICU/step-down) — so that only a score of 4-5 requires ICU-level care and a score of 3 on the ward is concordant, unless a note documents a justifying factor?'''
+
+inclusion_criteria = [
+  "Disposition matches the standard CURB-65 severity band — score 0-1 → community/OP or ward (low risk); score 2 → ward (intermediate); score 3-5 → ward (high risk), with 4-5 warranting ICU/step-down — i.e. only 4-5 requires ICU-level care and a score of 3 on the ward is concordant — OR a documented factor justifies an apparent mismatch.",
+]  # → YES
+
+exclusion_criteria = [
+  "CURB-65 4-5 managed on the general ward with no documented justifying factor (under-triage), OR low CURB-65 (score 0-1) admitted to the ICU with no documented justifying factor (over-triage). A score of 3 managed on the ward is NOT under-triage.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "Any element of the data necessary for calculation of the patient's CURB-65 score is not available.",
+  "Any data necessary to determine the patient's other comorbidities is not available.",
+  "A CURB-65 component is missing at admission AND cannot be imputed (note: per the standard CURB-65 convention, a missing BUN may be imputed from age when other components are present); if no component can be recovered or imputed, the score — and concordance — can't be computed.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "The patient's comorbidities required their allocation to a different level of care to that directed by the CURB-65 algorithm.",
+  "The 'confusion' component is genuinely ambiguous (GCS vs documented AMS) under the operational definition.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Confusion/mental status (first set); BUN; respiratory rate; SBP/DBP; age; admission level of care; notes for justifying factors; patient admission notes for comorbidities.",
+]
+
+grounding_requirements = '''
+Required sources: hosp/labevents (BUN 51006); icu/chartevents (RR, BP, mental status/GCS); hosp/admissions + transfers + icustays (level of care); patients (age); MIMIC-IV-Note.
+Required fields: confusion/GCS; BUN; RR; SBP/DBP; age; care location; justifying factors in notes.
+Required timing logic: all components at/near admission (first set); disposition = initial level of care.
+Authoritative public sources
+- Community-acquired pneumonia (2026) BMJ Best Practice (bmjbestpractice.bmj.com)
+- CURB-65 pneumonia assessment adapted for electronic decision support (2010) National Library of Medicine (pmc.ncbi.nlm.nih.gov)
+'''

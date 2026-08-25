@@ -1,0 +1,57 @@
+# Process rubric for scenario-25 (ams-workup), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Determined whether the patient presented with Altered Mental Status (AMS)."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Determined that specified blood work investigations (blood glucose, BMP, blood gas, toxicology) were performed or that they were not clinically appropriate."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Determined that specified infectious diseases investigations (blood cultures, urinary cultures, LP) were performed or that they were not clinically appropriate."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Determined that an EKG or an EEG was performed or that they were not clinically appropriate."
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Determined that a CT head without contrast was performed or that it was not clinically appropriate."
+
+[[rubric]]
+id = "D6"
+weight = "+1"
+title = "Escalated an element (rather than faulting it) when whether it was indicated is genuinely ambiguous from the presentation."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Faulted as 'missed' an element not indicated by the presentation (e.g. ammonia without liver disease, blood cultures if not febrile, LP without suspected CNS infection, EEG without suspected seizure)."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Asserted an element was performed without the supporting data"
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Counted an ordered test as performed without a result, report or resulted value confirming it took place, for any element that has a result stream (labs, cultures, head CT, CSF)."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Counted a CT head WITH contrast as satisfying the non-contrast CT head element."

@@ -1,0 +1,53 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "stroke-time-targets"
+description = "Hyperacute stroke time-target audit"
+params = ["subject_id", "hadm_id", "stay_id"]
+prompt = """
+For ischemic-stroke admission hadm_id={hadm_id} (subject_id={subject_id}, ED stay_id={stay_id}), did hyperacute care meet AHA time targets — thrombolytics within door-to-needle target (or appropriately not given), and thrombectomy considered for LVO?
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Was thrombolysis delivered within the door-to-needle target, or appropriately withheld (out of window / contraindication / refusal documented), and was thrombectomy considered where LVO was suspected? (LVO = Large Vessel Occlusion — blockage of a major cerebral vessel (ICA, MCA, vertebral, or basilar artery); suspect on cortical signs (gaze deviation, aphasia, agnosia) and NIHSS ≥ 6. Thrombectomy is considered for an eligible LVO; contraindications include an active hemorrhagic bleed, a known haematological clotting disorder, and a large core infarct.)'''
+
+inclusion_criteria = [
+  "Lytics were ADMINISTERED within door-to-needle target OR",
+  "Lytics were not offered for a clinically appropriate and documented reason (patient refusal, out-of-window, contraindication) AND",
+  "LVO was not suspected OR",
+  "LVO was suspected and thrombectomy was commenced within the eligibility window (groin puncture within 6 h of symptom onset / last-known-well — up to 24 h in selected patients with favorable imaging) OR",
+  "LVO was suspected and thrombectomy was not offered for a clinically appropriate and documented reason (patient refusal, size of infarction, contraindication).",
+]  # → YES
+
+exclusion_criteria = [
+  "Lytics were indicated and were given but were given outside the door-to-needle target and there is no documented and clinically appropriate reason for the target miss OR",
+  "Lytics were indicated but were not given and there is no documented and clinically appropriate reason for why they were not given OR",
+  "Thrombectomy was indicated and occurred but the groin puncture was outside the eligibility window (> 6 h from symptom onset / last-known-well without qualifying favorable-imaging criteria for extension to 24 h) and there is no documented and clinically appropriate reason OR",
+  "Thrombectomy was indicated but did not occur and there is no documented and clinically appropriate reason for that target miss.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "The patient's arrival time in the hospital cannot be determined (whether as an ED encounter or as an inter-hospital transfer) with the result that the door-to-needle time cannot be calculated.",
+  "Eligibility for thrombolysis cannot be determined from the patient's record.",
+  "Only a lytic ORDER time is available (not administration time), so door-to-needle time cannot be calculated.",
+  "Eligibility for thrombectomy (including LVO status) cannot be determined.",
+  "Only a thrombectomy ORDER time is available (not the groin-puncture time), or the symptom-onset / last-known-well time is undocumented, so the onset-to-puncture eligibility window cannot be assessed.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = []  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "ED arrival time (edstays.intime); symptom-onset / last-known-well time; first head-imaging time; neurology evaluation time; thrombolytic ADMINISTRATION time; LVO status (CTA); thrombectomy groin-puncture time; documented reason for any non-treatment; documented reason for any delay in treatment.",
+]
+
+grounding_requirements = '''
+Required sources: MIMIC-IV-ED edstays.csv.gz (intime=arrival) + triage.csv.gz; MIMIC-IV-Note radiology (head CT/CTA) + neurology notes; hosp/emar + poe (alteplase/tenecteplase); icu/inputevents (alteplase 221319); procedureevents (thrombectomy).
+Required fields: edstays.intime; symptom-onset / last-known-well time; imaging charttime; lytic ADMINISTRATION time; LVO on CTA; groin-puncture time; documented contraindication.
+Required timing logic: door-to-needle = lytic administration time − edstays.intime (target ≤ 60 min; thrombolysis eligible ≤ 4.5 h from symptom onset); thrombectomy eligibility = groin puncture within 6 h of symptom onset (up to 24 h in selected patients with favorable imaging).
+Authoritative public sources
+- 2019 AHA/ASA Guideline for the Early Management of Acute Ischemic Stroke (Powers et al., Stroke 2019)
+- AHA Target: Stroke door-to-needle goals.
+- National Institute of Clinical Excellence, Stroke and Ischaemic Attack in Over-16s (2022)
+'''

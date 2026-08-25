@@ -1,0 +1,48 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "renal-trajectory"
+description = "Longitudinal renal-function trajectory"
+params = ["subject_id"]
+prompt = """
+For subject_id {subject_id}, with multiple admissions, is the patient’s renal function on a worsening trajectory across their course? Decide how to measure kidney function, and cite the specific admissions, the values you relied on, and the inflection points.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Across all admissions, is renal function worsening (vs stable/improving), assessed by estimated GFR (via a validated equation such as the 2021 CKD-EPI, or MDRD / Cockcroft-Gault) rather than serum creatinine alone — since creatinine under-states GFR decline as muscle mass falls?'''
+
+inclusion_criteria = [
+  "Sustained decline in per-admission baseline eGFR across ≥2 admissions amounting to a drop in KDIGO GFR category, OR onset of kidney replacement therapy (hemodialysis, peritoneal dialysis, or transplantation), OR documented CKD-stage progression with concordant labs. (A declining-eGFR trajectory is robust to the muscle-mass confound — Yes is unaffected.)",
+  "If cystatin-C is available across ≥2 admissions: a sustained shift in cystatin-C beyond the delta.",
+]  # → YES
+
+exclusion_criteria = [
+  "Per-admission baseline eGFR flat or improving across admissions. A discrete reversible AKI recovering to baseline does not count as worsening.",
+]  # → NO — takes precedence over the medical-ambiguity clause below when both would fit; see there.
+
+indeterminate_lack_of_data_criteria = [
+  "< 2 admissions or sparse creatinine; trajectory dominated by one acute reversible event with unclear baseline.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "Flat/mildly-rising creatinine in an older/frail/long-course patient where muscle loss means stable creatinine cannot exclude real GFR decline — especially with coded CKD and no cystatin-C / muscle-corrected eGFR available (the usual case in MIMIC-IV, 2008–2019). Applies only where the per-admission eGFR trajectory is not flat or improving; where it is, the exclusion (No) criterion governs.",
+  "Lab-vs-ICD discordance — codes assert CKD/progression but creatinine is mild/flat (could be the confound; needs a human read).",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Per-admission baseline/peak/discharge creatinine with dates",
+  "reno-active med changes",
+  "discharge-summary spans for inflection points",
+  "any weight/BMI trend and any cystatin-C / eGFR — with an explicit note when these are absent.",
+]
+
+grounding_requirements = '''
+- Required sources: hosp/labevents (creatinine 50912); hosp/admissions; prescriptions/emar (reno-active meds); diagnoses_icd (CKD/AKI/dialysis); MIMIC-IV-Note discharge.
+- Required fields: creatinine value+charttime mapped to admission; admit/disch; drug names; CKD/AKI ICD codes.
+- Required timing logic: order admissions chronologically; per-admission baseline; compare across admissions; med changes in inter-admission intervals.
+Authoritative public sources
+- KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of CKD
+- NKF-ASN 2021 Task Force final report (Sept 2021)
+'''

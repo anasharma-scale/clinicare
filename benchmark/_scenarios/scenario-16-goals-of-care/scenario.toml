@@ -1,0 +1,44 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "goals-of-care"
+description = "Goals-of-care documentation in serious illness"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For serious-illness patient subject_id={subject_id} on admission hadm_id={hadm_id}, was a goals-of-care or advance-care-planning conversation documented this admission? Quote supporting notes; if absent, state whether it is a missed opportunity given the trajectory.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Is there documentation during this admission of a GOC/ACP element — code-status discussion or change, palliative-care consult, prognosis/goals conversation, advance directive/POLST, or hospice/comfort decision? (Serious illness, per the NCP definition, = a health condition that carries a high risk of mortality and either negatively impacts a person's daily function or quality of life or excessively strains their caregiver.)'''
+
+inclusion_criteria = [
+  "Where at least one serious illness criterion exists on the patient's record, one or more GOC/ACP elements are explicitly documented (including a code-status discussion, a palliative care consultation, a goals conversation, directive/POLST, hospice/comfort decision) as evidenced by a quoted note span rather than a code OR",
+  "Where at least one serious illness criterion exists on the patient's record, a documented and clinically appropriate reason for why a GOC/ACP discussion was not conducted (such as patient refusal, patient incapacity, supervening emergency).",
+]  # → YES
+
+exclusion_criteria = [
+  "Where at least one serious illness criterion exists on the patient's record, no GOG/ACP elements are explicitly documented as evidence by a quoted note span AND",
+  "There is no documented and clinically appropriate reason for why a GOG/ACP discussion was not conducted (such as patient refusal, patient incapacity, supervening emergency).",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "Patient records are unavailable or incomplete meaning that GOC/ACP discussion status cannot be determined.",
+  "Illness criteria have not been completed meaning that patient's serious illness status cannot be determined.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = []  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Discharge summary + any consult/progress notes for code-status, palliative-care, prognosis/goals, directive, hospice/comfort language; serious-illness qualifying criteria; patient capacity status; an explicit negative search result when concluding absence.",
+]
+
+grounding_requirements = '''
+Required sources: MIMIC-IV-Note discharge (+ any consult/progress notes); diagnoses_icd (serious-illness criteria, e.g. Z51.5 palliative encounter); admissions (prior-admission count).
+Required fields: note spans mentioning code status / palliative / goals / directive / hospice; qualifying diagnoses; note-set completeness.
+Required timing logic: documentation must fall within the current admission window.
+Authoritative public sources
+- National Consensus Project Clinical Practice Guidelines for Quality Palliative Care (4th ed.); Joint Commission Advance Care Planning standards.
+- American Medical Association, Advanced Care Planning, Code of Medical Ethics (2026) (\code-medical-ethics.ama-assn.org)
+'''

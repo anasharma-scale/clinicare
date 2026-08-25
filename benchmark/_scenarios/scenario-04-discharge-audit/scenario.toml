@@ -1,0 +1,52 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "discharge-audit"
+description = "Discharge-summary factual audit (CDI)"
+params = ["note_id", "hadm_id"]
+prompt = """
+Audit the discharge summary note_id {note_id} (hadm_id={hadm_id}). Does it contain any material factual claim about the hospital course that is contradicted by the objective chart data? A claim is contradicted only where it asserts a discrete fact — a value, a count, a dose, a date, a laterality or anatomic site, a drug, a named event, or a duration derivable from timestamps — AND the record materially disagrees with it: the discrepancy crosses a clinically actionable threshold, reverses a trend, or misstates one of those particulars (a date counts even where it is out by a single day). A rounded value or a peak out by one increment is not a contradiction, and a clinical characterisation ("haemodynamically stable", "improved") is contradicted only where the record taken as a whole is inconsistent with it, not by an individual transient value. If any claim is contradicted, that settles the audit even where other claims cannot be checked. Give a per-claim verdict (supported / contradicted / unverifiable / ambiguous) and cite the conflicting timestamped value for any contradiction.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Does the discharge summary contain at least one material factual claim about the hospital course that is contradicted by the structured chart data?'''
+
+inclusion_criteria = [
+  "One or more CHECKABLE material claim in the discharge summary conflicts with a timestamped value or statement on the patient's record (such as 'afebrile throughout' against a charted temperature greater than 38.0 C). A claim is checkable when its subject has a corresponding structured stream in the record — a medication administration, a lab or vital value, a procedure, a culture result, or a duration derivable from timestamps.",
+  "One or more checkable material claim asserts an event that its structured stream covers but does not contain — for example the summary states a medication was given, the administration stream for the admission is present, and it records no such administration. This is contradiction by absence. It does not apply where an order record exists without a matching administration record: nothing then establishes that the event happened, which is lack of data, below.",
+  "PRECEDENCE. Where one checkable material claim is CONTRADICTED and other claims are merely unverifiable or ambiguous, the contradiction governs and the verdict is Yes. The audit exists to surface contradicted claims, so an established contradiction is not displaced by gaps elsewhere in the record. Only reach an Indeterminate verdict where NO claim is contradicted and an unresolved claim is itself decisive.",
+  "A DATED or DAY-NUMBERED event is placed on a different day than the timestamped record supports — for example the summary puts extubation, drain or line removal, or discharge on a different post-operative day than the event timestamps give. This IS a material contradiction even where the gap is a single day and could be read as a labelling convention; a day-level error in the hospital course affects the complication and quality-of-care picture, which is what makes documentation material. The discrepancy must be established from the timestamped record itself — the event time plus any corroborating stream, such as the respiratory-device charting that accompanies an extubation — and not from arithmetic on the narrative alone.",
+]  # → YES
+
+exclusion_criteria = [
+  "Every checkable material claim in the patient's discharge summary is supported by matching structured data in the patient's record. Claims with no corresponding structured stream — narrative or subjective assertions such as 'tolerated the procedure well', 'ambulating independently', 'family updated' — are not checkable and do not count against the summary. Requiring those to be verifiable would make this verdict unreachable for any real discharge summary.",
+  "A claim is checkable only where it asserts a DISCRETE, DETERMINATE fact: a value, a count, a dose, a date or day, a named event or procedure, a duration derivable from timestamps. A clinical CHARACTERISATION ('haemodynamically stable', 'improved', 'afebrile', 'an overnight stay') or an explicitly APPROXIMATE figure ('systolics in the 120s-150s', 'drained roughly 1.8 L') is not made checkable merely by the existence of a stream covering the same physiology. Such a claim is contradicted only where the stream taken AS A WHOLE is inconsistent with it — sustained hypotension requiring intervention against 'remained stable' — and NOT by an individual transient or boundary value that a clinician summarising the course would reasonably describe that way. A summary is a summary; holding its characterisations to the precision of a discrete assertion would make Yes near-universal and the audit meaningless.",
+  "MATERIALITY OF A NUMERIC DISCREPANCY. A difference between a summary figure and the charted value counts only where it crosses a clinically actionable threshold, reverses the direction of a trend, or misstates a count, dose, date, laterality, anatomic site or drug. A restatement that leaves the clinical interpretation unchanged is NOT a contradiction — a lab value rounded a hundredth, a peak reported one increment low, a rate given as an approximate band. Judged the other way, a real discharge summary is contradicted somewhere almost always, which makes the audit vacuous. A misstated date is material even at a single day, because a day-level error in the course changes the complication and quality-of-care picture.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "A checkable material claim cannot be adjudicated because the structured stream it would be checked against is unavailable for the admission (for example, a claim about a medication administration where the patient's medication chart is absent entirely — not merely missing that one entry), and that claim is material enough that resolving it either way would change the verdict.",
+  "The stream exists but does not span the window the claim asserts, and that claim is material enough that resolving it either way would change the verdict — so the gap is in coverage rather than in the whole stream. This is the lack-of-data end of the partial-coverage rule above: an unverifiable claim only reaches this label when it is decisive. Where the other checkable claims settle the verdict on their own, the partially-covered claim is simply set aside and the verdict follows them.",
+  "A decisive checkable material claim rests on an order record with no administration, result or report confirming the event took place, and NOTHING ELSE in the record bears on whether it happened. This bare case is lack of data, not medical ambiguity: the confirming record is simply missing, so the data is not complete. It matches instruction_appendix principle 3 (prefer what was done over what was ordered), which the agent sees, and the equivalent sepsis-bundle clauses. Where the record does supply a competing defensible reading, the medical-ambiguity clause governs instead. Distinguish both from contradiction by absence above, which requires a stream that covers the window and would have recorded the event but does not.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "The patient’s chart itself contains internally conflicting structured values (e.g., two contradictory recorded temperatures) — the values are all present, so what defeats the audit is that they disagree, not that something is missing.",
+  "An order or dispensing record exists with no administration record, AND the record supplies a COMPETING DEFENSIBLE reading of why the drug may not have been given — the agent it names would be clinically inappropriate or contraindicated for the documented diagnosis, or the summary itself positively asserts non-administration. Both readings then remain defensible on what was retrieved, which is ambiguity rather than a plain retrieval gap. Distinguish this from the bare case in lack-of-data below, where nothing but the missing record bears on the question. Likewise where a prescribing record and an administration record are both present and DISAGREE (e.g. on dose), the conflict is ambiguity.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Per-claim verdict (supported / contradicted / unverifiable). Every contradiction must cite a real timestamped conflicting value (or the absence of a conforming real timestamped conflicting value) — guarding against the \"fabricated support\" failure mode. A CDI disposition per claim (amend / query provider / no action).",
+]
+
+grounding_requirements = '''
+- Required sources: MIMIC-IV-Note discharge.csv.gz (the summary); hosp/labevents.csv.gz; icu/inputevents.csv.gz; icu/chartevents.csv.gz; icu/procedureevents.csv.gz; hosp/admissions.csv.gz.
+- Required fields: narrative claim text; labevents.valuenum + charttime; inputevents.itemid (drug) + starttime; chartevents (temperature/HR) + charttime; admissions.admittime / dischtime.
+- Required timing logic: each claim verified against values within the admission window; "throughout / never / always" claims require full-stay coverage to confirm or contradict.
+Authoritative public sources
+- AHIMA/ACDIS "Guidelines for Achieving a Compliant Query Practice — 2022 Update (acdis.org/resources)
+- AHIMA Standards of Ethical Coding (aihma.org)
+- ACDIS Code of Ethics (acdis.org)
+'''

@@ -1,0 +1,43 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "overdose-disposition"
+description = "Opioid-overdose ED disposition & post-overdose care"
+params = ["subject_id", "stay_id", "hadm_id"]
+prompt = """
+For subject_id={subject_id} presenting with suspected overdose (ED stay_id={stay_id}, hadm_id={hadm_id} if admitted), was post-overdose care guideline-concordant — appropriate naloxone/observation plus at least one of: MOUD offer, take-home naloxone, or addiction/social-work linkage?
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Was the overdose encounter managed and followed up per best practice — naloxone with adequate observation, and ≥1 documented post-overdose intervention (buprenorphine induction offered, take-home naloxone, addiction-medicine consult, social work)?'''
+
+inclusion_criteria = [
+  "Acute management appropriate (naloxone dosed/observed) AND ≥1 evidence-based post-overdose intervention documented (MOUD offered, take-home naloxone prescribed, addiction-medicine/social-work involvement).",
+]  # → YES
+
+exclusion_criteria = [
+  "Acute opioid-overdose encounter present, all relevant note streams retrieved, and NONE of the evidence-based post-overdose interventions documented (care gap).",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "No ED encounter, or the presentation is not an opioid overdose (no naloxone, no opioid-poisoning code) — out of scope.",
+  "The patient did not survive to a point where post-overdose secondary prevention could apply (e.g. death or irreversible anoxic brain injury during the encounter) — the follow-up arm is moot, not a care gap — out of scope.",
+  "Post-overdose interventions may live in consult/discharge notes that were not retrieved — escalate that sub-point rather than auto-calling No.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = []  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "ED presentation + naloxone (pyxis, dose/timing); observation duration + disposition (edstays); buprenorphine, take-home naloxone, addiction/social-work consults; prior similar ED visits; opioid-poisoning ED diagnosis.",
+]
+
+grounding_requirements = '''
+Required sources: MIMIC-IV-ED edstays (disposition) + triage (CC) + pyxis (naloxone) + diagnosis (T40.x / 965.0x); hosp/prescriptions + emar (naloxone, buprenorphine, naltrexone); MIMIC-IV-Note discharge (consults, follow-up).
+Required fields: naloxone charttime/dose (pyxis); ED disposition; opioid-poisoning ED ICD; buprenorphine/naltrexone prescriptions; consult documentation; prior overdose ED visits.
+Required timing logic: acute encounter timeline; post-overdose interventions before disposition; prior-visit lookback across the dataset.
+Authoritative public sources
+- SAMHSA TIP 63: Medications for Opioid Use Disorder
+- ACEP/CDC guidance on ED management of opioid overdose and naloxone distribution.
+'''

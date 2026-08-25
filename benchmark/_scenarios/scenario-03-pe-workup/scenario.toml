@@ -1,0 +1,52 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "pe-workup"
+description = "PE workup adequacy (chest pain / dyspnea)"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For this admission subject_id={subject_id}, hadm_id={hadm_id} presenting with chest pain, was pulmonary embolism adequately considered and worked up? Adequacy turns on the documented reasoning as well as the tests: a record with no reference to PE at all is a No, and where PE was worked up to a definitive result but no pretest-probability assessment is documented, the adequacy question does not resolve — say so rather than reading adequacy off the imaging result. Where the workup did find a PE, adequacy also covers whether a treatment decision is documented. Cite every part including negatives.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Was PE adequately considered and worked up during the admission, and what was the documented outcome (ruled in / ruled out / inconclusive / not addressed / appropriately deferred on low pretest probability)? PE need not have been the only differential — where PE was reasonably considered among other conditions and addressed appropriately in context, the workup can still be adequate.'''
+
+inclusion_criteria = [
+  "Where PE was pursued with dedicated diagnostic testing (a D-dimer, CTPA or V/Q obtained to assess PE): an appropriate and authoritative clinical decision algorithm (such as the Wells Criteria or the Revised Geneva Score) was applied — explicitly, or implicitly in a way that makes the patient's risk category evident — and the record documents the patient as low risk, intermediate risk or high risk. Entering the diagnostic pathway is what makes the risk category necessary, because the category is what determines which pathway was owed. A laboratory's standing interpretive comment on a D-dimer result is not documentation that an algorithm was applied to this patient, and the order of tests alone does not establish a risk category.",
+  "Where PE was NOT pursued with dedicated testing: PE was reasonably considered among other conditions and appropriately set aside on a documented basis — another diagnosis accounts for the presentation, or the record otherwise shows why PE did not warrant testing. No formal risk score is required on this path; adequacy is judged in context. (PE need not have been the only differential.) These first two criteria are alternative entry paths, not cumulative requirements: the pathway, rule-in/rule-out and treatment criteria that follow apply only on the first path, where testing was pursued.",
+  "The patient was investigated according to the relevant pulmonary embolism clinical decision algorithm. A low-risk patient is assessed against the Pulmonary Embolism Rule-Out Criteria (PERC). An intermediate-risk patient is assessed with an age-adjusted D-dimer, then CT pulmonary angiography (CTPA) if positive. A high-risk patient goes directly to CTPA (V/Q scan as an alternative).",
+  "A PE would then need to be ruled in or out in cases where further investigations were warranted (that is, all patients other than low-risk patients ruled out by PERC). More particularly, the relevant investigation (D-dimer, CTPA, VQ scan) would need to be assessed as showing or excluding PE.",
+  "Any diagnosed PE would subsequently need to be properly treated. For instance, the patient was treated with therapeutic (rather than prophylactic) anticoagulation (the most common treatment), thrombolysis, surgical embolectomy, endovascular thrombolysis, or inferior vena cava (IVC) filtering.",
+]  # → YES
+
+exclusion_criteria = [
+  "PE was not considered: no reference is made to PE at all, or PE appears only incidentally (for instance named in a radiology report) without being pursued as a diagnostic question. Or PE was considered but the diagnostic pathway was not carried through to a definitive result — no D-dimer and no imaging, or testing that cannot exclude PE — without a documented reason.",
+  "If the patient was classified as low risk under the clinical algorithm, the Pulmonary Embolism Rule-Out Criteria were not applied (either implicitly or explicitly). If the patient was classified as intermediate risk, the patient was not assessed with an age-adjusted D-dimer (then CTPA if positive) without a documented reason. If the patient was classified as high risk, the patient was not referred for a CTPA or a VQ scan (without a documented reason).",
+  "Where an investigation was determined as necessary and was then carried out, there is no record of that investigation being assessed to confirm or exclude PE. For instance, there is no record of the D-dimer, CTPA or VQ scan being properly assessed.",
+  "Where PE was diagnosed, there is no record of a treatment decision being made or implemented. For instance, there is no record that the patient was started on therapeutic anticoagulation or was referred for less common PE treatments such as thrombolysis, surgical embolectomy, endovascular thrombolysis or inferior vena cava filtering.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "A patient was referred for an investigation (such as a D-dimer, CTPA, VQ scan) that did not occur and there is no record for why it did not occur (for instance, the patient refused, financial reasons, contraindications, supervening emergencies).",
+  "No clinician narrative is available for the encounter, so no history, examination or differential exists from which a pretest-probability assessment could be established. This dataset's notes are discharge summaries and radiology reports only — there are no ED provider notes, H&Ps or progress notes — so in practice this means the admission has no discharge summary. Establish absence by listing the admission's notes; a narrative that exists but does not record a risk category is medical ambiguity, not lack of data (see below).",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "A clinician narrative exists for the encounter, PE was pursued with dedicated diagnostic testing (a D-dimer, CTPA or V/Q obtained to assess PE) and carried through to a definitive result — but that narrative records no patient-specific pretest-probability or risk category (low risk / intermediate risk / high risk), so whether the workup matched the pathway the patient's risk warranted cannot be determined. The narrative is present and silent, which is what distinguishes this from lack of data: where no narrative exists at all, the lack-of-data criterion above governs. Where PE was not pursued with dedicated testing, this criterion does not apply — the inclusion criterion for reasonable consideration in context governs instead. A standing laboratory comment mentioning the Wells Criteria does not supply a risk category.",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Cited spans for: PE considered (incl. the risk-pathway), workup, documented conclusion, and treatment intent/modality — including negatives (impression excluding PE, no PE/DVT code, no therapeutic anticoagulation).",
+]
+
+grounding_requirements = '''
+- MIMIC-IV-Note discharge.csv.gz + radiology.csv.gz; hosp/labevents.csv.gz (D-dimer); hosp/poe.csv.gz (CT / ultrasound radiology orders); hosp/prescriptions.csv.gz + pharmacy.csv.gz + emar.csv.gz (anticoagulation); hosp/diagnoses_icd.csv.gz (PE/DVT code presence/absence).
+- note text + charttime; D-dimer value/flag; poe.order_subtype + ordertime; drug name + dose + route (prophylactic vs therapeutic); diagnoses_icd.icd_code.
+- Timing: all workup events within the admission window; anticoagulation start time relative to the CT (or VQ scan); sequence indication → test → conclusion.
+Authoritative public sources
+- American Heart Association, 2026 Guideline for the Evaluation and Management of Acute Pulmonary Embolism in Adults (2026). (\professional.heart.org)
+- American College of Cardiology, Pulmonary Embolism Guideline Comparison: Key Points (2024) (\acc.org)
+- British Thoracic Society, British Thoracic Society Guidelines for the Management of Suspected Acute Pulmonary Embolism (2026) (\thorax.bmj.com)
+'''

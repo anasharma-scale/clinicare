@@ -1,0 +1,35 @@
+# Policy outcome rubric for empiric-abx — 3-class, judged on the policy-ON condition.
+# SEEDED from policy_gold.json + scenario.toml; EDIT freely. Each item is classified into one of
+# three classes and the per-item scores are AVERAGED into the policy outcome:
+#   followed (1.0)   partially_followed (0.5)   did_not_follow (0.0)
+#
+# NOTE on PR1: graded DETERMINISTICALLY by gold-doc membership —
+# followed = cited ONLY governing (gold) documents; partially_followed = cited >=1 governing
+# doc BUT also cited non-governing ones; did_not_follow = cited no governing doc. The governing
+# set is this scenario's list in eval/gold/policy_gold.json — curate THAT list (not the
+# wording) to change what counts as governing (e.g. drop a non-authoritative doc).
+#
+# `kind` selects how an item is graded (do NOT change it): 'relevance' = DETERMINISTIC gold-doc
+# membership (see the PR1 note above — no LLM); 'citation_existence' = deterministic (do the
+# citations resolve to a real corpus doc + valid line span); 'citation_support' = LLM judges
+# whether each cited passage backs its claim. `weight` scales an item's share of the mean.
+
+# ── Policy relevance ─────────────────────────────────────────────────────────
+[[rubric]]
+id = "PR1"
+kind = "relevance"
+weight = "+1"
+title = "Response grounds its determination in the policy or care guidelines a domain expert would consider governing for empiric antibiotic selection, culture-guided de-escalation, and antibiotic stewardship program standards."
+
+# ── Policy citation correctness (generic; applies to every scenario) ─────────────
+[[rubric]]
+id = "PC1"
+kind = "citation_existence"
+weight = "+1"
+title = "Every policy citation resolves to a real corpus document and a valid line span (no fabricated or out-of-corpus citations)."
+
+[[rubric]]
+id = "PC2"
+kind = "citation_support"
+weight = "+1"
+title = "Each cited passage factually supports the specific claim it is attached to (genuine documentary attribution, not merely on-topic or fabricated)."

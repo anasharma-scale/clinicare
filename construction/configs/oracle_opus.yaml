@@ -1,0 +1,61 @@
+# Saved harbor run config: Opus 4.8 (claude-code) oracle over the MIMIC healthcare answer tasks.
+# One of three (opus / gpt / gemini). This header is the canonical one; gpt/gemini reference it.
+#
+# 1. BUILD
+#      uv run python benchmark/scripts/build_tasks.py --include-answer --no-process-rubric
+#    One task dir serves both backends as generated; no post-build edit. Leave
+#    network_mode = "allowlist" alone, and keep any sidecar host DOTTED — the compose alias is
+#    `mimic-tools.internal` rather than a bare label because some backends validate allowlist
+#    entries server-side and reject bare labels.
+#
+# 2. EXPORT  (the repo-root .env must be EXPORTED, not just sourced)
+#      set -a; source .env; set +a
+#      export MIMIC_DATA_ROOT=/path/to/mimic-parquet   # bind-mounted read-only into the sidecar
+#    Needs ANTHROPIC_API_KEY and MIMIC_API_SECRET. Leave MIMIC_TOOLS_URL UNSET on docker:
+#    docker-compose substitutes a host value over the local default, so a stray URL left in your
+#    shell silently sends the agent to some other sidecar.
+#
+# 3. LAUNCH
+#      uv run harbor run -c construction/configs/oracle_opus.yaml -e docker \
+#          --extra-docker-compose benchmark/tasks_answer/_sidecar.compose.yml \
+#          --ae "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" \
+#          --job-name full_answer_opus_$(date +%Y%m%d_%H%M%S) --yes
+#
+#    Add `--ae "ANTHROPIC_BASE_URL=$ANTHROPIC_BASE_URL"` only if you route the model through a
+#    gateway. Pass it explicitly when you do: harbor also picks it up from the ambient shell, so
+#    omitting it works but never lands in the trial's config.json, and the run stops recording
+#    which endpoint produced the labels. Build the tasks with the var exported too — build_tasks.py
+#    reads it to allowlist the gateway host.
+#
+#    On MODAL (`-e modal`): drop --extra-docker-compose and host the sidecar yourself, pointing
+#    MIMIC_TOOLS_URL at it.
+#
+# extra_docker_compose is deliberately NOT a key in this file, only a CLI flag. Modal does not
+# ignore the key: its presence alone flips the provider into compose/DinD mode, which sets
+# network_allowlist=False (DinD needs host networking), and harbor then rejects the task's
+# `network_mode = "allowlist"`. Do not work around that by relaxing network_mode — compose mode
+# also sets disable_internet=False, so the agent would get host networking with no egress lockdown
+# and could reach the data store and the instance-metadata endpoint directly.
+#
+# verifier.disable + artifacts: this pass only needs each report's `## Answer:` line, so the LLM
+# judges are pure cost (~10 calls/trial). With the verifier off the report lands at
+# artifacts/verifier/report.md, NOT verifier/report.md — analyze_labels.py handles both.
+#
+# Secrets (API keys) stay on the CLI via --ae, never in this file.
+job_name: full_answer_opus
+n_attempts: 1             # harbor -k (rollouts per task)
+n_concurrent_trials: 12   # harbor -n (concurrency, not extra trials); tune for throughput
+agents:
+  - name: claude-code
+    model_name: claude-opus-4-8
+    kwargs:
+      # Closed-book: disable claude-code's web tools, so the only external grounding is the
+      # staged policy corpus.
+      disallowed_tools: "WebSearch WebFetch"
+datasets:
+  - path: benchmark/tasks_answer
+artifacts:
+  - source: /workspace/report.md
+    destination: verifier/report.md
+verifier:
+  disable: true

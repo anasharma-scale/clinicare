@@ -1,0 +1,62 @@
+# Scenario template. build_tasks.py renders one task per cohort row, substituting the
+# {placeholders} below into `prompt`.
+id = "post-ct-aki"
+description = "Post-CT acute kidney injury (KDIGO)"
+params = ["subject_id", "hadm_id"]
+prompt = """
+For ICU patient subject_id={subject_id}, hadm_id={hadm_id} who underwent a CT this admission, did the patient develop AKI within 48 h after the CT? Determine the baseline creatinine using a hierarchical approach: the lowest creatinine documented in the 3–12 months before admission; if no prior value is available, the admission creatinine (the patient may present already in AKI); if neither and CKD is documented, an estimated baseline via the MDRD equation assuming a GFR of 75 mL/min/1.73 m². Apply KDIGO serum-creatinine criteria and frame the result as AKI following CT — not contrast-caused. The serum-creatinine criteria apply only where serum creatinine reflects the patient's own kidney function; where it does not, the question does not resolve — say so rather than applying the thresholds.
+"""
+
+# Detailed spec — the labelling metadata. NOT shown to the agent; it sees only `prompt`.
+# clinical_question is the fully operationalized question; the four criteria lists are the
+# per-patient label rules for the 4-class scheme
+# (Yes / No / Indeterminate – lack of data / Indeterminate – medical ambiguity).
+clinical_question = '''Within 48 h after the first qualifying CT, did the patient meet KDIGO serum-creatinine criteria (rise ≥0.3 mg/dL OR ≥1.5× baseline), where baseline is set hierarchically — the lowest creatinine in the 3–12 months before admission; else the admission creatinine (patient may present in AKI); else, if CKD is documented, an estimated baseline via MDRD assuming eGFR 75 mL/min/1.73 m²?'''
+
+inclusion_criteria = [
+  "Baseline established by the hierarchical approach — the lowest creatinine in the 3–12 months before admission; else the admission creatinine (noting the patient may present in AKI); else, if CKD is documented, an estimated baseline via MDRD assuming eGFR 75 mL/min/1.73 m².",
+  "≥1 creatinine ≤48 h post-CT.",
+  "ALL post-CT values for the peak available and searched (not just the first).",
+  "A post-CT value satisfies (value − baseline ≥ 0.3) OR (value ≥ 1.5× baseline) AND Patient not on chronic dialysis / ESRD.",
+]  # → YES
+
+exclusion_criteria = [
+  "A baseline can be established via the hierarchy (lowest creatinine in the 3–12 months before admission; else the admission creatinine; else an MDRD estimate where CKD is documented).",
+  "At least 2 serum creatinine values are documented within 48 hours after the CT timestamp (adequate post-CT sampling).",
+  "No post-CT creatinine value meets either KDIGO threshold:",
+  "absolute rise >/= 0.3 mg/dL",
+  "relative 1.5xbaseline rise",
+  "Patient not on chronic RRT, no ESRD/CKD stage 4+.",
+]  # → NO
+
+indeterminate_lack_of_data_criteria = [
+  "No creatinine available to set any tier of the baseline hierarchy (no 3–12-mo prior value, no admission creatinine, and no CKD documentation for an MDRD estimate) OR no creatinine within 48 h post-CT",
+  "CT timing ambiguous — order time vs actual scan time can’t be reconciled, or multiple CTs and the “first qualifying” CT can’t be uniquely identified.",
+  "No CT can be identified during the admission — the premise (the patient underwent a CT this admission) is not met, so the case is out of scope.",
+  "Insufficient post-CT sampling (e.g. < 2 creatinine values) to confirm the peak.",
+]  # → INDETERMINATE – lack of data
+
+indeterminate_medical_ambiguity_criteria = [
+  "Chronic dialysis / ESRD (ICD N18.6 / Z99.2 / 585.6 / V45.11, or any hemodialysis order), KDIGO acute thresholds not applicable.",
+  "Labile baseline — the candidate prior creatinines (3–12 mo before admission) fluctuate materially so a clean reference can’t be set and a +0.3 rise can’t be confidently attributed",
+]  # → INDETERMINATE – medical ambiguity
+
+required_evidence = [
+  "Creatinine timeline: baseline sources (lowest in 3–12 mo pre-admission; else admission value; else CKD/MDRD basis) → 48 h post-CT showing all values; ESRD/dialysis status; the CT SCAN time distinguished from order time (delays), confirmed via radiology report where possible.",
+]
+
+grounding_requirements = '''
+- hosp/poe.csv.gz (CT Scan orders);
+- hosp/labevents.csv.gz (creatinine, itemid 50912);
+- hosp/diagnoses_icd.csv.gz (ESRD + AKI codes);
+- MIMIC-IV-Note radiology.csv.gz (contrast confirmation);
+- hosp/prescriptions.csv.gz + emar.csv.gz (nephrotoxins).
+- Radiogy report - IV contrast confirmation =. Nephroactive drugs co-exposure.
+- poe.order_subtype="CT Scan" + ordertime; labevents.itemid=50912, valuenum, charttime;
+- diagnoses_icd.icd_code (ESRD/AKI); drug name + dose + route. Drug names, dose, route from prescriptions chart.
+- baseline = hierarchical (lowest creatinine in 3–12 mo before admission; else admission creatinine; else MDRD estimate at eGFR 75 if CKD documented); AKI window = (CT, CT + 48 h\]; nephrotoxin co-exposure window = CT ± 48 h. Report AKI following CT, not contrast-caused.
+Authoritative public sources
+- KDIGO 2026 AKI guideline
+- ACR Manual on Contrast Media
+- ACR–NKF Consensus Statements on IV iodinated contrast in kidney disease (Radiology, 2020)
+'''

@@ -1,0 +1,543 @@
+{
+ "_schema": {
+  "description": "Load-bearing facts each scenario's governing docs must carry. Two consumers: validate_policy_facts.py checks `must_contain` survives corpus conversion; a policy-recall metric can judge `statement` against the agent's report (the policy analogue of insights_recall).",
+  "fields": {
+   "id": "stable key for the fact",
+   "doc": "governing doc that carries it; must appear in this scenario's policy_gold.json entry",
+   "rubrics": "rubric ids that cannot be satisfied if the fact is absent",
+   "must_contain": "verbatim substrings, matched after collapsing whitespace so re-wrapping is tolerated",
+   "statement": "the fact as a checkable claim, for report-level coverage judging"
+  }
+ },
+ "advanced-imaging": [
+  {
+   "id": "advanced-imaging-modalities",
+   "doc": "cms-appropriate-use-criteria-program.md",
+   "rubrics": [
+    "D3"
+   ],
+   "must_contain": [
+    "advanced diagnostic imaging",
+    "magnetic resonance imaging (MRI)"
+   ],
+   "statement": "Advanced diagnostic imaging comprises CT, PET/nuclear medicine, and MRI, as distinct from bedside modalities."
+  },
+  {
+   "id": "icu-imaging-baseline",
+   "doc": "imaging-of-icu-patients-2019.md",
+   "rubrics": [
+    "D3",
+    "N1"
+   ],
+   "must_contain": [
+    "portable chest radiograph is the most"
+   ],
+   "statement": "The portable chest radiograph is the most commonly requested ICU imaging examination, which is why cross-sectional studies must be identified from the imaging record rather than assumed."
+  }
+ ],
+ "pe-workup": [
+  {
+   "id": "pretest-probability-tools",
+   "doc": "creager-et-al-2026-2026-aha-acc-accp-acep-chest-scai-shm-sir-svm-svn-guideline-for-the-evaluation-and-management-of.md",
+   "rubrics": [
+    "D1",
+    "N2",
+    "N6"
+   ],
+   "must_contain": [
+    "Clinical decision tools such as the Wells score, the Revised Geneva Score, and the Pulmonary Embolism Rule Out Criteria (PERC)"
+   ],
+   "statement": "Pretest probability for suspected PE is assessed with clinical decision tools such as the Wells score, the Revised Geneva Score, and PERC."
+  },
+  {
+   "id": "cross-guideline-pe-pathway",
+   "doc": "pulmonary-embolism-guideline-comparison-key-points-american-college-of-cardiolog.md",
+   "rubrics": [
+    "D1",
+    "D2",
+    "N3"
+   ],
+   "must_contain": [
+    "validated pretest probability scores, such as the Wells",
+    "D-dimer testing to exclude acute PE in non",
+    "PE Rule-out Criteria (PERC)"
+   ],
+   "statement": "Every major PE guideline starts from a validated pretest probability score (Wells or Geneva) and uses D-dimer to exclude PE only in non-high-probability patients, with PERC an option at low probability."
+  }
+ ],
+ "post-ct-aki": [
+  {
+   "id": "kdigo-creatinine-thresholds",
+   "doc": "davenport-et-al-2020-use-of-intravenous-iodinated-contrast-media-in-patients-with-kidney-disease-consensus-statements.md",
+   "rubrics": [
+    "D3",
+    "N4"
+   ],
+   "must_contain": [
+    "1.5\u20131.9 times baseline serum creatinine",
+    "Increase in serum Cr \u2265 0.3 mg/dL",
+    "Any AKI occurring within 48 hours after the administration of contrast media"
+   ],
+   "statement": "Contrast-associated AKI is any AKI within 48 hours of contrast administration, meeting KDIGO criteria of a serum creatinine rise of at least 0.3 mg/dL OR 1.5 times baseline."
+  },
+  {
+   "id": "ca-aki-is-correlative",
+   "doc": "ACR-Manual-on-Contrast-Media.md",
+   "rubrics": [
+    "D3",
+    "N2"
+   ],
+   "must_contain": [
+    "within 48 hours following the intravascular administration of iodinated contrast medium",
+    "Absolute serum creatinine increase \u22650.3 mg/dL",
+    "CA-AKI is a correlative diagnosis"
+   ],
+   "statement": "CA-AKI is a correlative diagnosis that implies no causal relationship to contrast; it must not be reported as contrast-induced nephropathy."
+  }
+ ],
+ "renal-trajectory": [
+  {
+   "id": "race-free-egfr",
+   "doc": "nkf-asn-2021-egfr-task-force.md",
+   "rubrics": [
+    "D8"
+   ],
+   "must_contain": [
+    "CKD-EPI creatinine equation refit without the race variable"
+   ],
+   "statement": "eGFR should be estimated with the 2021 CKD-EPI creatinine equation refit without a race variable."
+  },
+  {
+   "id": "ckd-definition-and-staging",
+   "doc": "kdigo-2024-ckd-guideline.md",
+   "rubrics": [
+    "D1",
+    "D5",
+    "D6"
+   ],
+   "must_contain": [
+    "abnormalities of kidney structure or function",
+    "with implications for health",
+    "GFR categories",
+    "albuminuria categories",
+    "cystatin C"
+   ],
+   "statement": "CKD is abnormalities of kidney structure or function with implications for health, staged by GFR and albuminuria categories, with cystatin C available to confirm creatinine-based eGFR."
+  }
+ ],
+ "sepsis-bundle": [
+  {
+   "id": "sep1-bundle-windows",
+   "doc": "BPCIAdvanced_AltFS_MY4_Sepsis_08112020_508.md",
+   "rubrics": [
+    "D3",
+    "D5"
+   ],
+   "must_contain": [
+    "within three hours of presentation of severe sepsis",
+    "within six hours of presentation of severe sepsis"
+   ],
+   "statement": "The SEP-1 management bundle is scored against a 3-hour and a 6-hour window measured from presentation of severe sepsis."
+  }
+ ],
+ "readmission-30d": [
+  {
+   "id": "readmission-window",
+   "doc": "cms-hwr-readmission-methodology.md",
+   "rubrics": [
+    "D2",
+    "D3",
+    "N1"
+   ],
+   "must_contain": [
+    "readmitted or not within 30 days",
+    "Planned readmissions"
+   ],
+   "statement": "The readmission outcome is whether an unplanned acute-care readmission occurs within 30 days of index discharge."
+  },
+  {
+   "id": "planned-readmission-algorithm",
+   "doc": "cms-hrrp-planned-readmission-algorithm.md",
+   "rubrics": [
+    "D6",
+    "N2"
+   ],
+   "must_contain": [
+    "Planned Readmission Algorithm",
+    "Procedure Categories that are Always Planned"
+   ],
+   "statement": "Planned readmissions are excluded using the CMS Planned Readmission Algorithm, which designates certain procedure categories as always planned."
+  }
+ ],
+ "med-reconciliation": [
+  {
+   "id": "reconciliation-transition-points",
+   "doc": "who-high5s-medication-reconciliation-sop.md",
+   "rubrics": [
+    "D1",
+    "D3",
+    "D4"
+   ],
+   "must_contain": [
+    "Best Possible Medication History",
+    "Medication reconciliation at admission",
+    "Medication Reconciliation at Discharge"
+   ],
+   "statement": "Medication reconciliation is performed against a Best Possible Medication History at admission, internal transfer, and discharge."
+  }
+ ],
+ "dka-resolution": [
+  {
+   "id": "ada-easd-resolution-criteria",
+   "doc": "dci240032.md",
+   "rubrics": [
+    "D4",
+    "N1",
+    "N2"
+   ],
+   "must_contain": [
+    "Resolution of DKA is defined as achieving plasma ketone <0.6 mmol/L",
+    "venous pH \u22657.3 or bicarbonate \u226518 mmol/L"
+   ],
+   "statement": "DKA resolution requires plasma ketone <0.6 mmol/L plus venous pH >=7.3 or bicarbonate >=18 mmol/L; the anion gap should not be used as a resolution criterion."
+  },
+  {
+   "id": "statpearls-resolution-composite",
+   "doc": "statpearls-adult-dka-2025.md",
+   "rubrics": [
+    "N2"
+   ],
+   "must_contain": [
+    "a blood glucose level of less than 200 mg/dL and 2 of the following",
+    "A serum bicarbonate level of \u226515 mEq/L",
+    "Venous pH of >7.3",
+    "A calculated anion gap of \u226412 mEq/L"
+   ],
+   "statement": "The StatPearls DKA resolution composite is glucose <200 mg/dL plus at least 2 of: bicarbonate >=15 mEq/L, venous pH >7.3, anion gap <=12 mEq/L."
+  }
+ ],
+ "hfref-gdmt": [
+  {
+   "id": "gdmt-four-pillars",
+   "doc": "heidenreich-et-al-2022-2022-aha-acc-hfsa-guideline-for-the-management-of-heart-failure-a-report-of-the-american-college.md",
+   "rubrics": [
+    "D2",
+    "D3",
+    "D4",
+    "D5"
+   ],
+   "must_contain": [
+    "4 medication classes that include sodium-glucose cotransporter-2 inhibitors",
+    "mineralocorticoid receptor antagonist"
+   ],
+   "statement": "Guideline-directed medical therapy for HFrEF comprises four medication classes: ACEi/ARB/ARNI, beta-blocker, mineralocorticoid receptor antagonist, and SGLT2 inhibitor."
+  }
+ ],
+ "stroke-time-targets": [
+  {
+   "id": "door-to-needle-target",
+   "doc": "aha-target-stroke-fact-sheet.md",
+   "rubrics": [
+    "D3"
+   ],
+   "must_contain": [
+    "door-to-needle (DTN) times of 60 minutes or less"
+   ],
+   "statement": "The Target: Stroke door-to-needle goal for IV thrombolysis is 60 minutes or less from hospital arrival."
+  },
+  {
+   "id": "alteplase-window-and-dtn",
+   "doc": "aha-asa-acute-ischemic-stroke-2019.md",
+   "rubrics": [
+    "D2",
+    "D3"
+   ],
+   "must_contain": [
+    "up to 4.5 hours after symptom onset",
+    "door-to-needle [DTN] time \u226460 minutes"
+   ],
+   "statement": "IV alteplase benefits selected patients treated up to 4.5 hours after symptom onset, and door-to-needle time of 60 minutes or less is the treatment-speed target."
+  }
+ ],
+ "he-precipitant": [
+  {
+   "id": "ammonia-not-diagnostic",
+   "doc": "aasld-easl-hepatic-encephalopathy-2014.md",
+   "rubrics": [
+    "N1"
+   ],
+   "must_contain": [
+    "Increased blood ammonia alone does not add any diagnostic, staging, or prognostic value"
+   ],
+   "statement": "A blood ammonia level alone has no diagnostic, staging, or prognostic value for hepatic encephalopathy and must not be used to rule it in or out."
+  }
+ ],
+ "overdose-disposition": [
+  {
+   "id": "moud-agents",
+   "doc": "samhsa-tip63-moud.md",
+   "rubrics": [
+    "D3"
+   ],
+   "must_contain": [
+    "methadone, naltrexone, and buprenorphine"
+   ],
+   "statement": "The FDA-approved medications for opioid use disorder are methadone, naltrexone, and buprenorphine."
+  }
+ ],
+ "icu-delirium": [
+  {
+   "id": "screening-cadence",
+   "doc": "abcdef-bundle-delirium-bmjopen-2021.md",
+   "rubrics": [
+    "D1",
+    "D2"
+   ],
+   "must_contain": [
+    "every 4 hours",
+    "at least twice per day"
+   ],
+   "statement": "Expected delirium screening cadence is RASS every 4 hours and CAM-ICU at least twice per day."
+  }
+ ],
+ "goals-of-care": [
+  {
+   "id": "palliative-care-any-stage",
+   "doc": "ncp-palliative-care-guidelines-4th-ed.md",
+   "rubrics": [
+    "D2"
+   ],
+   "must_contain": [
+    "Beneficial at any stage of a serious illness"
+   ],
+   "statement": "Palliative care is beneficial at any stage of a serious illness and is not restricted to end-of-life care."
+  }
+ ],
+ "anticoag-reversal": [
+  {
+   "id": "acc-major-bleed-criteria",
+   "doc": "acc-2020-bleeding-oral-anticoagulants-ecdp.md",
+   "rubrics": [
+    "D3",
+    "N3",
+    "N4"
+   ],
+   "must_contain": [
+    "hemodynamic compromise",
+    "anatomically critical site",
+    "\u22652 units of packed red blood cells",
+    "hemoglobin drop \u22652 g/dL"
+   ],
+   "statement": "ACC major bleeding is bleeding with hemodynamic compromise, at an anatomically critical site, requiring transfusion of at least 2 units of packed RBCs, or causing a hemoglobin drop of at least 2 g/dL."
+  },
+  {
+   "id": "acc-plasma-when-no-pcc",
+   "doc": "acc-2020-bleeding-oral-anticoagulants-ecdp.md",
+   "rubrics": [
+    "D4",
+    "N5"
+   ],
+   "must_contain": [
+    "If 4F-PCC is not available, use plasma 10\u201315 mL/kg"
+   ],
+   "statement": "Where 4F-PCC is unavailable, the ACC pathway sanctions plasma at 10-15 mL/kg for warfarin-associated major bleeding."
+  },
+  {
+   "id": "ash-prophylaxis-vs-therapeutic",
+   "doc": "blooda-30609.md",
+   "rubrics": [
+    "N6"
+   ],
+   "must_contain": [
+    "prophylaxis for hospitalized and nonhospitalized medical patients",
+    "the guideline panel recommends",
+    "the guideline panel suggests"
+   ],
+   "statement": "The ASH 2018 guideline covers VTE prophylaxis dosing for medical inpatients, which is distinct from therapeutic anticoagulation and must not be read as evidence the patient was therapeutically anticoagulated."
+  }
+ ],
+ "pneumonia-curb65": [
+  {
+   "id": "curb65-disposition-bands",
+   "doc": "bmj-community-acquired-pneumonia.md",
+   "rubrics": [
+    "D3",
+    "D4",
+    "D5"
+   ],
+   "must_contain": [
+    "BUN >19.6 mg/dL (>7 mmol/L): 1 point",
+    "Score 0-1: low risk; recommendation is for outpatient care",
+    "Score 2: moderate risk; recommendation is for hospitalization",
+    "Score 3-5: high risk; recommendation is for ICU admission"
+   ],
+   "statement": "CURB-65 disposition bands are 0-1 low risk (outpatient care), 2 moderate risk (hospitalization), and 3-5 high risk (ICU admission), with the BUN component set at >19.6 mg/dL (>7 mmol/L)."
+  },
+  {
+   "id": "curb65-elements",
+   "doc": "curb65-electronic-decision-support-2011.md",
+   "rubrics": [
+    "D2",
+    "D4",
+    "N4"
+   ],
+   "must_contain": [
+    "BUN \u2265 20 mg/dL",
+    "Respiratory rate \u2265 30 breaths/min",
+    "Age \u2265 65 years",
+    "Score of \u2265 2: severe CAP"
+   ],
+   "statement": "CURB-65 scores one point each for confusion, BUN >=20 mg/dL, respiratory rate >=30/min, SBP <90 or DBP <=60 mm Hg, and age >=65; a score of 0-1 may be managed as an outpatient and >=2 indicates severe CAP warranting hospitalization."
+  }
+ ],
+ "hyperkalemia-management": [
+  {
+   "id": "severity-bands",
+   "doc": "ukka-acute-hyperkalaemia-2023.md",
+   "rubrics": [
+    "D1",
+    "D2",
+    "D6",
+    "N4"
+   ],
+   "must_contain": [
+    "5.5 \u2013 5.9 mmol/l",
+    "6.0 \u2013 6.4 mmol/l",
+    "\u2265 6.5 mmol/l"
+   ],
+   "statement": "Hyperkalaemia is mild at K 5.5-5.9 mmol/L, moderate at 6.0-6.4 mmol/L, and severe at >=6.5 mmol/L, with severe requiring calcium for myocardial protection."
+  }
+ ],
+ "postop-complications": [
+  {
+   "id": "clavien-dindo-grades",
+   "doc": "clavien-dindo-surgical-complications-2004.md",
+   "rubrics": [
+    "D5",
+    "N3"
+   ],
+   "must_contain": [
+    "Any deviation from the normal postoperative course",
+    "Requiring surgical, endoscopic or radiological intervention"
+   ],
+   "statement": "Clavien-Dindo grades surgical complications by the treatment required: Grade I is any deviation from the normal postoperative course without intervention, Grade III requires surgical, endoscopic, or radiological intervention."
+  }
+ ],
+ "eol-goal-concordance": [
+  {
+   "id": "symptom-management-last-days",
+   "doc": "nice-ng31-care-of-dying-adults.md",
+   "rubrics": [
+    "D4"
+   ],
+   "must_contain": [
+    "manage common symptoms without causing unacceptable side effects",
+    "Anticipatory prescribing"
+   ],
+   "statement": "Care of dying adults requires managing common symptoms without unacceptable side effects, supported by anticipatory prescribing."
+  },
+  {
+   "id": "eol-service-availability",
+   "doc": "nice-ng142-end-of-life-care-service-delivery.md",
+   "rubrics": [
+    "D5"
+   ],
+   "must_contain": [
+    "Advance care planning",
+    "24 hours a day"
+   ],
+   "statement": "End-of-life service delivery requires advance care planning and access to a healthcare professional 24 hours a day who can access the person's records."
+  }
+ ],
+ "sepsis-source-abx": [
+  {
+   "id": "source-control-and-de-escalation",
+   "doc": "surviving-sepsis-campaign-international-guidelines-for.md",
+   "rubrics": [
+    "D1",
+    "D3",
+    "D5"
+   ],
+   "must_contain": [
+    "requires emergent source control",
+    "narrow the spectrum",
+    "daily assessment for de-escalation of antimicrobials"
+   ],
+   "statement": "Sepsis management requires identifying an anatomical source needing emergent source control, narrowing the antimicrobial spectrum once results allow, and assessing daily for de-escalation rather than using fixed durations."
+  },
+  {
+   "id": "tailoring-requires-susceptibility",
+   "doc": "idsa-antimicrobial-guidance.md",
+   "rubrics": [
+    "D3",
+    "N2"
+   ],
+   "must_contain": [
+    "the causative organism has been identified and antibiotic susceptibility results are known",
+    "Approaches to empiric treatment, transitioning to oral therapy, duration of therapy"
+   ],
+   "statement": "IDSA treatment recommendations assume the causative organism and its antibiotic susceptibility results are known, so tailoring must be aligned to a susceptibility result rather than the organism name alone."
+  }
+ ],
+ "frequent-admitter": [
+  {
+   "id": "readmission-drivers",
+   "doc": "cms-reducing-disparities-in-readmissions-2024.md",
+   "rubrics": [
+    "D3",
+    "N3"
+   ],
+   "must_contain": [
+    "social determinants of health (SDOH)",
+    "lack of access to transportation",
+    "poor health literacy"
+   ],
+   "statement": "Intervenable readmission drivers include social determinants of health such as lack of transportation, unstable housing, poor health literacy, and social isolation."
+  },
+  {
+   "id": "readmission-root-causes",
+   "doc": "statpearls-reducing-readmissions-2024.md",
+   "rubrics": [
+    "D3",
+    "N3"
+   ],
+   "must_contain": [
+    "better discharge planning, patient education, and post-discharge follow-up",
+    "low health literacy, limited social network, lower socioeconomic status"
+   ],
+   "statement": "Readmission drivers are addressed through discharge planning, patient education and post-discharge follow-up, with risk raised by low health literacy, limited social network and lower socioeconomic status."
+  }
+ ],
+ "transfusion-audit": [
+  {
+   "id": "aabb-restrictive-thresholds",
+   "doc": "aabb-rbc-transfusion-thresholds-2023.md",
+   "rubrics": [
+    "D3"
+   ],
+   "must_contain": [
+    "less than 7 g/dL",
+    "7.5 g/dL for patients undergoing cardiac surgery",
+    "8 g/dL for patients undergoing orthopedic surgery",
+    "hematologic and oncologic disorders"
+   ],
+   "statement": "AABB restrictive RBC transfusion thresholds are <7 g/dL for hemodynamically stable patients, 7.5 g/dL for cardiac surgery, 8 g/dL for orthopedic surgery or preexisting cardiovascular disease, and 7 g/dL for hematologic/oncologic disorders."
+  }
+ ],
+ "empiric-abx": [
+  {
+   "id": "stewardship-review-and-de-escalation",
+   "doc": "idsa-shea-antibiotic-stewardship-2016.md",
+   "rubrics": [
+    "D1",
+    "D4"
+   ],
+   "must_contain": [
+    "antibiotic time-outs, stop orders",
+    "de-escalation of antibiotics and duration of therapy",
+    "developing guidelines for empiric therapy"
+   ],
+   "statement": "Stewardship programmes use antibiotic time-outs and stop orders to prompt routine review of regimens, addressing de-escalation and duration once susceptibility is known."
+  }
+ ]
+}

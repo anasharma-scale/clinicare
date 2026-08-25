@@ -1,0 +1,57 @@
+# Process rubric for scenario-18 (pneumonia-curb65), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Confirmed that the patient presented to hospital with pneumonia"
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Calculated the patient's CURB-65 score upon arrival at hospital OR stated that it was not possible to calculate CURB-65 score on the data available"
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Determined the level of care to which the patient was allocated after arriving at hospital (community, ward or ICU)"
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Determined whether or not patient's level of care allocation matched CURB-65 algorithm OR whether there was a documented and clinically appropriate reason for not complying with that algorithm"
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Stated that CURB-65 algorithm was either not complied with or was complied with OR that it was not possible to determine the question in the circumstances"
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Asserted a documented CURB-65 score that was not recorded."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Used later values for the CURB-65 components instead of the first at-admission set."
+
+[[rubric]]
+id = "N3"
+weight = "-1"
+title = "Flagged over-triage without checking notes for a justifying factor."
+
+[[rubric]]
+id = "N5"
+weight = "-1"
+title = "Scored the 'confusion' component as present or absent where GCS and documented AMS conflict, rather than treating that component as ambiguous."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Imputed a missing CURB-65 component other than BUN-from-age, rather than treating the score as uncomputable."

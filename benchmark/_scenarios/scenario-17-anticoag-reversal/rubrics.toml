@@ -1,0 +1,72 @@
+# Process rubric for scenario-17 (anticoag-reversal), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Identified that the patient is on anticoagulant"
+
+[[rubric]]
+id = "D2"
+weight = "+1"
+title = "Identified the type of bleed"
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Characterised the patient's bleed as \"significant\" enough to require reversal of anticoagulation"
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Checked the reversal agent against the guideline for that anticoagulant/bleed"
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Checked reversal was administered without undue delay OR there was a documented reason for the delay, using administration time."
+
+[[rubric]]
+id = "D6"
+weight = "+2"
+title = "Checked for existence of documentation expressing compliance with reversal clinical guidelines OR expressing reasons for non-compliance"
+
+[[rubric]]
+id = "D7"
+weight = "+2"
+title = "Checked the reversal dose"
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Used reversal agent order doses rather than administration doses to determine compliance with reversal clinical dosage guidelines"
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Used reversal agent order times rather than administration times to determine compliance with reversal clinical timing guidelines"
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Established the bleed's SEVERITY from an ICD code rather than from the documented clinical findings — the ACC major-bleed criteria are hemodynamic compromise, an anatomically critical site, transfusion of ≥2 units of RBCs, or a hemoglobin drop ≥2 g/dL, none of which a diagnosis code carries. Using a code to corroborate the bleed SITE is not this error."
+
+[[rubric]]
+id = "N4"
+weight = "-2"
+title = "Graded reversal concordance without establishing whether the bleed was major under the ACC major-vs-nonmajor framework."
+
+[[rubric]]
+id = "N5"
+weight = "-2"
+title = "Counted vitamin K alone as guideline-concordant reversal for a warfarin major bleed. Plasma is NOT this error: the ACC pathway sanctions plasma 10–15 mL/kg where 4F-PCC is unavailable, and 4F-PCC was not FDA-approved until April 2013, part-way through this dataset's span."
+
+[[rubric]]
+id = "N6"
+weight = "-2"
+title = "Treated prophylactic-dose anticoagulation as therapeutic anticoagulation when establishing that the patient was anticoagulated at presentation."

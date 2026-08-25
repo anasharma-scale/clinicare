@@ -1,0 +1,58 @@
+# Process rubric for scenario-08 (empiric-abx), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Identified any antibiotic(s) that was prescribed empirically (that is, any antibiotic(s) that were prescribed before the causative organism's susceptibility became known)."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Identified the results of the culture OR that nothing was grown on the culture OR that the culture was not performed."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Compared the empiric regimen against the panel to judge coverage OR state that no comparison is possible where nothing was grown on culture or culture was not performed."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Measured de-escalation <= 48 h after the narrower susceptibility report using administration/stop time, OR stated measurement was not applicable only where no organism grew or no culture was performed."
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Judged whether the culture was a likely contaminant using the positive-bottle/set count."
+
+[[rubric]]
+id = "D6"
+weight = "+2"
+title = "Cited the culture-draw time, final-result time, and antibiotic administration/stop timing used, OR that any of that data was not available."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Judged coverage from the organism name alone, without the susceptibility interpretation."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Used antibiotic ORDER time instead of administration/stop time for the de-escalation clock."
+
+[[rubric]]
+id = "N3"
+weight = "-1"
+title = "Treated a likely contaminant as a true pathogen (or vice versa) without justification."
+
+[[rubric]]
+id = "N4"
+weight = "-2"
+title = "Considered efficacy of only one one antibiotic agent where more than one antibiotic was prescribed empirically."
+

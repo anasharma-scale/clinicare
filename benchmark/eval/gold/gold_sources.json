@@ -1,0 +1,267 @@
+[
+  {
+    "title": "Task 6 \u2014 ICU sepsis-bundle (SEP-1) compliance",
+    "tables": [
+      "chartevents",
+      "edstays",
+      "emar",
+      "labevents",
+      "microbiologyevents",
+      "patients",
+      "poe",
+      "radiology",
+      "triage"
+    ]
+  },
+  {
+    "title": "Task 9 \u2014 Medication reconciliation discrepancy",
+    "tables": [
+      "discharge",
+      "emar",
+      "medrecon",
+      "pharmacy",
+      "prescriptions"
+    ]
+  },
+  {
+    "title": "Task 25 \u2014 Altered mental status workup completeness",
+    "tables": [
+      "discharge",
+      "labevents",
+      "microbiologyevents",
+      "poe",
+      "radiology"
+    ]
+  },
+  {
+    "title": "Task 11 \u2014 HFrEF guideline-directed therapy at discharge",
+    "tables": [
+      "chartevents",
+      "discharge",
+      "emar",
+      "labevents",
+      "prescriptions"
+    ]
+  },
+  {
+    "title": "Task 22 \u2014 End-of-life care goal-concordance",
+    "tables": [
+      "admissions",
+      "chartevents",
+      "diagnoses_icd",
+      "discharge",
+      "inputevents",
+      "procedureevents"
+    ]
+  },
+  {
+    "title": "Task 20 \u2014 Post-operative complication screen",
+    "tables": [
+      "diagnoses_icd",
+      "discharge",
+      "inputevents",
+      "labevents",
+      "microbiologyevents",
+      "procedureevents",
+      "procedures_icd",
+      "radiology"
+    ]
+  },
+  {
+    "title": "Task 3 \u2014 PE workup adequacy (chest pain / dyspnea)",
+    "tables": [
+      "discharge",
+      "emar",
+      "labevents",
+      "pharmacy",
+      "poe",
+      "prescriptions",
+      "radiology"
+    ]
+  },
+  {
+    "title": "Task 10 \u2014 DKA resolution & protocol adherence",
+    "tables": [
+      "chartevents",
+      "emar",
+      "inputevents",
+      "labevents"
+    ]
+  },
+  {
+    "title": "Task 1 \u2014 Advanced cross-sectional imaging receipt (ICU stay)",
+    "tables": [
+      "admissions",
+      "icustays",
+      "patients",
+      "poe",
+      "radiology"
+    ]
+  },
+  {
+    "title": "Task 23 \u2014 Sepsis source identification & antibiotic evolution",
+    "tables": [
+      "discharge",
+      "emar",
+      "microbiologyevents",
+      "prescriptions",
+      "procedureevents",
+      "radiology"
+    ]
+  },
+  {
+    "title": "Task 15 \u2014 ICU delirium screening & ABCDEF management",
+    "tables": [
+      "chartevents",
+      "emar",
+      "inputevents"
+    ]
+  },
+  {
+    "title": "Task 8 \u2014 Empiric antibiotic appropriateness (stewardship)",
+    "tables": [
+      "emar",
+      "microbiologyevents",
+      "prescriptions",
+      "radiology"
+    ]
+  },
+  {
+    "title": "Task 16 \u2014 Goals-of-care documentation in serious illness",
+    "tables": [
+      "admissions",
+      "discharge",
+      "radiology"
+    ]
+  },
+  {
+    "title": "Task 17 \u2014 Anticoagulation reversal concordance",
+    "tables": [
+      "emar",
+      "inputevents",
+      "labevents",
+      "patients",
+      "prescriptions"
+    ]
+  },
+  {
+    "title": "Task 21 \u2014 RBC transfusion indication audit",
+    "tables": [
+      "chartevents",
+      "diagnoses_icd",
+      "inputevents",
+      "labevents"
+    ]
+  },
+  {
+    "title": "Task 19 \u2014 Acute hyperkalemia management sequence",
+    "tables": [
+      "chartevents",
+      "discharge",
+      "emar",
+      "inputevents",
+      "labevents",
+      "radiology"
+    ]
+  },
+  {
+    "title": "Task 2 \u2014 Post-CT acute kidney injury (KDIGO)",
+    "tables": [
+      "emar",
+      "labevents",
+      "poe",
+      "prescriptions",
+      "radiology"
+    ]
+  },
+  {
+    "title": "Task 18 \u2014 Pneumonia severity\u2013disposition concordance (CURB-65)",
+    "tables": [
+      "admissions",
+      "chartevents",
+      "discharge",
+      "icustays",
+      "labevents",
+      "patients",
+      "radiology",
+      "transfers"
+    ]
+  },
+  {
+    "title": "Task 14 \u2014 Opioid-overdose ED disposition & post-overdose care",
+    "tables": [
+      "discharge",
+      "edstays",
+      "emar",
+      "prescriptions",
+      "pyxis",
+      "triage"
+    ]
+  },
+  {
+    "title": "Task 12 \u2014 Hyperacute stroke time-target audit",
+    "tables": [
+      "discharge",
+      "edstays",
+      "emar",
+      "inputevents",
+      "poe",
+      "procedureevents",
+      "radiology",
+      "triage"
+    ]
+  },
+  {
+    "title": "Task 4 \u2014 Discharge-summary factual audit (CDI)",
+    "tables": [
+      "admissions",
+      "chartevents",
+      "discharge",
+      "inputevents",
+      "labevents",
+      "procedureevents"
+    ]
+  },
+  {
+    "title": "Task 13 \u2014 Hepatic encephalopathy precipitant identification",
+    "tables": [
+      "diagnoses_icd",
+      "discharge",
+      "emar",
+      "labevents",
+      "microbiologyevents",
+      "prescriptions",
+      "radiology"
+    ]
+  },
+  {
+    "title": "Task 5 \u2014 Longitudinal renal-function trajectory",
+    "tables": [
+      "admissions",
+      "discharge",
+      "emar",
+      "labevents",
+      "prescriptions"
+    ]
+  },
+  {
+    "title": "Task 24 \u2014 Frequent-admitter driver synthesis",
+    "tables": [
+      "admissions",
+      "diagnoses_icd",
+      "discharge",
+      "services",
+      "transfers"
+    ]
+  },
+  {
+    "title": "Task 7 \u2014 30-day readmission occurrence",
+    "tables": [
+      "admissions",
+      "discharge",
+      "drgcodes",
+      "radiology",
+      "transfers"
+    ]
+  }
+]

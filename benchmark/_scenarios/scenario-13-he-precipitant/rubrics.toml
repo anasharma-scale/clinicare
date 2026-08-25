@@ -1,0 +1,52 @@
+# Process rubric for scenario-13 (he-precipitant), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Worked through each standard HE precipitant candidate clinically indicated by the presentation (infection/SBP, GI bleed, electrolyte derangement, constipation/lactulose non-adherence, AKI/dehydration, sedating meds, dietary protein) with cited evidence, and said which candidates were not indicated."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Confirmed the major candidates were evaluated (paracentesis, cultures, electrolytes, AKI check, EtOH levels, urine/serum drug screen), esp. paracentesis when ascites present."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Supported the identified precipitant with objective data, not a code."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Cross-checked co-existing precipitants (electrolytes, AKI, GI bleed)."
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Escalated when a key candidate was not worked up despite indication."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Used the ammonia level as the diagnostic test to rule HE in/out."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Read the precipitant from an ICD code instead of objective data."
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Asserted 'no precipitant' without verifying that each clinically indicated candidate was actually worked up."
+
+[[rubric]]
+id = "N4"
+weight = "-1"
+title = "Asserted SBP excluded without an ascitic-fluid result."

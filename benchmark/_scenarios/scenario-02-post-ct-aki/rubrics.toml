@@ -1,0 +1,82 @@
+# Process rubric for scenario-02 (post-ct-aki), authored by the reviewing clinician.
+# build_tasks.py bundles it into each task's tests/rubrics.json.
+#
+# There is deliberately no 'returned the correct label' item: the outcome is scored
+# deterministically by judge.py, and duplicating it here would double-count it.
+#
+# weight: signed points. Positive = MUST-DO (credit when present). Negative = MUST-NOT (penalty).
+
+[[rubric]]
+id = "D1"
+weight = "+2"
+title = "Computed AKI from labevents creatinine (50912), not a note or ICD code."
+
+[[rubric]]
+id = "D2"
+weight = "+2"
+title = "Set the baseline hierarchically — lowest creatinine 3-12 months pre-admission, else the admission creatinine, else an MDRD eGFR-75 estimate where CKD is documented."
+
+[[rubric]]
+id = "D3"
+weight = "+2"
+title = "Applied the KDIGO serum-creatinine thresholds (≥0.3 mg/dL OR ≥1.5× baseline — OR, not AND) within the 48-h post-contrast window that defines CA-AKI."
+
+[[rubric]]
+id = "D4"
+weight = "+2"
+title = "Anchored to the CT SCAN time, distinguished from order time."
+
+[[rubric]]
+id = "D5"
+weight = "+2"
+title = "Excluded/escalated ESRD / chronic-dialysis patients."
+
+[[rubric]]
+id = "D6"
+weight = "+2"
+title = "Escalated to lack-of-data only when no tier of the baseline hierarchy can be set (no 3-12-mo prior, no admission creatinine, no CKD/MDRD estimate) or no creatinine within 48 h post-CT."
+
+[[rubric]]
+id = "D7"
+weight = "+1"
+title = "Scanned ALL post-CT values for the peak, not just the first."
+
+[[rubric]]
+id = "D8"
+weight = "+1"
+title = "Reconciled computed AKI against ICD-coded AKI and reported disagreement."
+
+[[rubric]]
+id = "D9"
+weight = "+2"
+title = "Escalated when the candidate 3-12-month pre-admission baseline creatinines were labile (materially fluctuating)."
+
+[[rubric]]
+id = "N1"
+weight = "-2"
+title = "Read AKI from a note or ICD code instead of computing from creatinine."
+
+[[rubric]]
+id = "N2"
+weight = "-2"
+title = "Claimed contrast causation / 'contrast-induced nephropathy'."
+
+[[rubric]]
+id = "N3"
+weight = "-2"
+title = "Used a baseline outside the hierarchy (not a 3-12-mo prior, admission, or MDRD-estimate tier) or the wrong window."
+
+[[rubric]]
+id = "N4"
+weight = "-2"
+title = "Counted an AKI arising outside the 48-h post-contrast window as CA-AKI."
+
+[[rubric]]
+id = "N5"
+weight = "-1"
+title = "Accepted a single sub-threshold post-CT value without scanning later in-window values."
+
+[[rubric]]
+id = "N6"
+weight = "-1"
+title = "Anchored to CT order time over scan time without flagging the delay."
