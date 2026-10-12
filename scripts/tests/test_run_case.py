@@ -25,9 +25,11 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import os
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from unittest import mock
 
@@ -89,6 +91,7 @@ def run_main_with_fake_harbor(
     reward: dict | None = None,
     judges: dict | None = None,
     judge_env: bool = True,
+    old_summaries: dict | None = None,
 ) -> tuple[int, str]:
     """`judges` fakes each judge script as {"process"|"policy": (exit code, summary, trial record)}:
     the summary and record are what that script writes to the job dir and the trial dir."""
@@ -112,6 +115,13 @@ def run_main_with_fake_harbor(
         )
         if corrupt:
             (trial / corrupt).write_text('{"score": 1.')
+        # Files an earlier grading run left in the job and trial dirs: {judge: (summary, record)}.
+        for name, (summary, record) in (old_summaries or {}).items():
+            _, trial_file, summary_file = run_case.JUDGES[name]
+            (jobs / "jn" / summary_file).write_text(json.dumps(summary))
+            (trial / "verifier" / trial_file).write_text(json.dumps(record))
+            old = time.time() - 3600
+            os.utime(jobs / "jn" / summary_file, (old, old))
 
         def fake_run(cmd, **kwargs):
             script = next((Path(p).name for p in cmd if "benchmark/eval/metrics/" in str(p)), None)
@@ -439,6 +449,18 @@ def main() -> int:
         got == ("judge_script_failed", False),
         str(got),
     )
+    # An earlier run's key was rejected; this run the policy judge stops before writing a summary
+    # (e.g. a missing corpus). Report this run's failure, not last run's cause.
+    rejected = {"n_scored": 0, "n_judge_errors": 1, "skipped": {}}
+    rc, out = run_main_with_fake_harbor(
+        harbor_rc=0,
+        stale=False,
+        grade=True,
+        judges={"process": (0, scored, {}), "policy": (1, None, None)},
+        old_summaries={"policy": (rejected, {"error": "AuthenticationError: Error code: 401"})},
+    )
+    got = json.loads(out)["grading"]["policy"]["reason"]
+    check("old run's summary, no new one -> judge_script_failed", got == "judge_script_failed", got)
     rc, out = run_main_with_fake_harbor(harbor_rc=0, stale=False)
     check("without --grade: grading is null", json.loads(out).get("grading", "absent") is None, out)
 

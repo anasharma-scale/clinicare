@@ -49,6 +49,7 @@ import json
 import shlex
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from dirhash import dirhash  # harbor's own task checksum (Task.checksum == dirhash(dir, sha256))
@@ -132,11 +133,21 @@ def _judge_outcome(outcome: str, reason: str, detail: str | None = None) -> dict
     return {"outcome": outcome, "reason": reason, "detail": detail}
 
 
-def judge_result(job_dir: Path, trial_dir: Path, judge: str, exit_code: int) -> dict:
-    """What one judge did with this job's single trial, read from the files the judge wrote."""
+def judge_result(job_dir: Path, trial_dir: Path, judge: str, exit_code: int, since: float) -> dict:
+    """What one judge did with this job's single trial, read from the files the judge wrote.
+
+    Only a summary written at or after `since` (this run's start) counts. An earlier run's summary
+    describes that run: a judge that now stops before writing one (a missing corpus, a crash) would
+    otherwise be reported with the old cause, e.g. a key that was rejected last time.
+    """
     _, trial_file, summary_file = JUDGES[judge]
+    summary_path = job_dir / summary_file
     try:
-        summary = json.loads((job_dir / summary_file).read_text())
+        if summary_path.stat().st_mtime < since:
+            return _judge_outcome(
+                "failed", "judge_script_failed", f"exit {exit_code}, wrote no new {summary_file}"
+            )
+        summary = json.loads(summary_path.read_text())
     except (OSError, ValueError):
         return _judge_outcome(
             "failed", "judge_script_failed", f"exit {exit_code}, no {summary_file}"
@@ -167,8 +178,9 @@ def grade_case(job_dir: Path, trial_dir: Path, env: dict[str, str]) -> dict:
             judge: _judge_outcome("failed", "judge_credentials_missing", detail) for judge in JUDGES
         }
     results = {}
+    started = time.time()
     for judge, code in zip(JUDGES, grade(job_dir, env)):
-        result = judge_result(job_dir, trial_dir, judge, code)
+        result = judge_result(job_dir, trial_dir, judge, code, started)
         if code != 0 and result["outcome"] != "failed":
             # The summary is from an earlier run (a cached trial); this run's script failed.
             result = _judge_outcome(
