@@ -22,6 +22,16 @@ Output contract — exit 0 and one JSON object on stdout whenever a trial dir ex
     graded          whether --grade ran and both judges finished: each one scored the trial or skipped
                     it by design (no report, no rubrics, policy-off task). False without --grade, and
                     false when a judge could not score it (judge error, missing judge credentials)
+    grading         null without --grade; else {"process": J, "policy": J}, one per judge, where J is
+                    {"outcome": "scored" | "skipped" | "failed", "reason": str, "detail": str | null}
+                    so a wrapper can say what went wrong and where to look. Reasons by outcome:
+                      skipped  no_report (the agent wrote none), no_process_rubrics,
+                               no_policy_rubrics, policy_off (nothing to score, by design)
+                      failed   judge_credentials_missing (JUDGE_BASE_URL / JUDGE_API_KEY unset),
+                               judge_credentials_rejected (the judge API returned 401 or 403),
+                               judge_error (any other judge failure; detail has the exception),
+                               no_rubrics (the task's rubric bundle is missing or unreadable),
+                               judge_script_failed (the script exited non-zero with no record)
 Exit 2 with a message on stderr when there is no trustworthy trial to report: a usage/preflight
 error (nothing ran), harbor refusing the job (e.g. the job dir exists with different settings), a
 trial whose result.json or reward.json cannot be parsed, or a finished trial in the job dir that
@@ -49,6 +59,17 @@ from clinicare_core import load_env, verifier_failed
 
 BASE = run_sweep.BASE
 EXIT_USAGE = 2
+
+# The two post-hoc judges: name in the `grading` report -> (script, per-trial file, job summary).
+JUDGES = {
+    "process": ("process.py", "process.json", "process_summary.json"),
+    "policy": ("policy_support.py", "policy_support.json", "policy_support_summary.json"),
+}
+JUDGE_CREDENTIALS = ("JUDGE_BASE_URL", "JUDGE_API_KEY")
+# What the openai SDK raises when the judge API refuses the key (401 / 403). The judges record an
+# error as "<ExceptionType>: <message>", so the type name is matched, never the message text.
+_REJECTED_KEY_ERRORS = ("AuthenticationError", "PermissionDeniedError")
+_FAILED_SKIPS = ("no_rubrics", "unverified")  # process.py FAILURE_REASONS that are skip records
 
 
 def fail(msg: str) -> int:
@@ -107,7 +128,57 @@ def log_tail(log: Path, lines: int = 5) -> str:
         return "(no log)"
 
 
-def grade(job_dir: Path, env: dict[str, str]) -> bool:
+def _judge_outcome(outcome: str, reason: str, detail: str | None = None) -> dict:
+    return {"outcome": outcome, "reason": reason, "detail": detail}
+
+
+def judge_result(job_dir: Path, trial_dir: Path, judge: str, exit_code: int) -> dict:
+    """What one judge did with this job's single trial, read from the files the judge wrote."""
+    _, trial_file, summary_file = JUDGES[judge]
+    try:
+        summary = json.loads((job_dir / summary_file).read_text())
+    except (OSError, ValueError):
+        return _judge_outcome(
+            "failed", "judge_script_failed", f"exit {exit_code}, no {summary_file}"
+        )
+    skipped = summary.get("skipped") or {}
+    if skipped:
+        reason = next(iter(skipped))
+        return _judge_outcome("failed" if reason in _FAILED_SKIPS else "skipped", reason)
+    if summary.get("n_judge_errors"):
+        try:
+            error = json.loads((trial_dir / "verifier" / trial_file).read_text()).get("error") or ""
+        except (OSError, ValueError):
+            error = ""
+        kind = error.split(":", 1)[0].strip()
+        reason = "judge_credentials_rejected" if kind in _REJECTED_KEY_ERRORS else "judge_error"
+        return _judge_outcome("failed", reason, error or None)
+    if summary.get("n_scored") or summary.get("n_cached"):
+        return _judge_outcome("scored", "scored")
+    return _judge_outcome("failed", "judge_script_failed", f"exit {exit_code}, nothing scored")
+
+
+def grade_case(job_dir: Path, trial_dir: Path, env: dict[str, str]) -> dict:
+    """Run both judges on the case (unless their credentials are missing) and report each one."""
+    missing = [key for key in JUDGE_CREDENTIALS if not env.get(key)]
+    if missing:
+        detail = f"{', '.join(missing)} not set in the environment or .env"
+        return {
+            judge: _judge_outcome("failed", "judge_credentials_missing", detail) for judge in JUDGES
+        }
+    results = {}
+    for judge, code in zip(JUDGES, grade(job_dir, env)):
+        result = judge_result(job_dir, trial_dir, judge, code)
+        if code != 0 and result["outcome"] != "failed":
+            # The summary is from an earlier run (a cached trial); this run's script failed.
+            result = _judge_outcome(
+                "failed", "judge_script_failed", f"exit {code}; see the job log"
+            )
+        results[judge] = result
+    return results
+
+
+def grade(job_dir: Path, env: dict[str, str]) -> list[int]:
     """Add the LLM-judged scores (process_pct, policy_citation_support_rate) to reward.json.
 
     grade.py writes side files only; these two scripts are what amend reward.json. Each has a
@@ -115,18 +186,17 @@ def grade(job_dir: Path, env: dict[str, str]) -> bool:
     process.py: no report, no rubrics, policy-off), exit 2 means one could not be scored for a
     fixable reason (FAILURE_REASONS: judge error, unreadable rubrics). So a clean exit from both is
     the right test. Checking reward.json for both judges' keys instead would mark every trial a
-    judge correctly skips as ungraded.
+    judge correctly skips as ungraded. Returns each script's exit code, in JUDGES order.
     """
-    codes = [
+    return [
         subprocess.run(
             [run_sweep.PY, f"benchmark/eval/metrics/{script}", str(job_dir), "--amend-reward"],
             env=env,
             stdout=sys.stderr,
             check=False,
         ).returncode
-        for script in ("process.py", "policy_support.py")
+        for script, _, _ in JUDGES.values()
     ]
-    return all(code == 0 for code in codes)
 
 
 def main() -> int:
@@ -204,7 +274,13 @@ def main() -> int:
             f"the trial in {job_dir} was built from a different version of task {args.task_id} "
             "(task checksum differs); use a new --job-name, or delete that job dir to re-run"
         )
-    report["graded"] = bool(args.grade and report["status"] != "dead" and grade(job_dir, env))
+    grading = None
+    if args.grade and report["status"] != "dead":
+        grading = grade_case(job_dir, Path(report["trial_dir"]), env)
+    report["graded"] = grading is not None and all(
+        j["outcome"] != "failed" for j in grading.values()
+    )
+    report["grading"] = grading
     print(json.dumps(report))
     return 0
 

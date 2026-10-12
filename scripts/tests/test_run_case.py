@@ -87,8 +87,11 @@ def run_main_with_fake_harbor(
     corrupt: str | None = None,
     grade: bool = False,
     reward: dict | None = None,
-    judge_rc: int = 0,
+    judges: dict | None = None,
+    judge_env: bool = True,
 ) -> tuple[int, str]:
+    """`judges` fakes each judge script as {"process"|"policy": (exit code, summary, trial record)}:
+    the summary and record are what that script writes to the job dir and the trial dir."""
     """run_case.main() against a placeholder task, with preflight and harbor replaced by fakes."""
     task_id = "advanced-imaging-000001"
     with tempfile.TemporaryDirectory() as tmp:
@@ -111,8 +114,19 @@ def run_main_with_fake_harbor(
             (trial / corrupt).write_text('{"score": 1.')
 
         def fake_run(cmd, **kwargs):
-            judge = any("benchmark/eval/metrics/" in str(part) for part in cmd)
-            return subprocess.CompletedProcess(cmd, judge_rc if judge else harbor_rc)
+            script = next((Path(p).name for p in cmd if "benchmark/eval/metrics/" in str(p)), None)
+            if script is None:
+                return subprocess.CompletedProcess(cmd, harbor_rc)
+            name = next(n for n, (s, _, _) in run_case.JUDGES.items() if s == script)
+            _, trial_file, summary_file = run_case.JUDGES[name]
+            code, summary, record = (judges or {}).get(name, (0, None, None))
+            if summary is not None:
+                (jobs / "jn" / summary_file).write_text(json.dumps(summary))
+            if record is not None:
+                (trial / "verifier" / trial_file).write_text(json.dumps(record))
+            return subprocess.CompletedProcess(cmd, code)
+
+        child = {"JUDGE_BASE_URL": "https://judge.example", "JUDGE_API_KEY": "placeholder"}
 
         argv = ["run_case.py", "--system", "codex-gpt56sol", "--task-id", task_id]
         argv += ["--tasks", str(tasks), "--jobs-dir", str(jobs), "--job-name", "jn"]
@@ -121,7 +135,7 @@ def run_main_with_fake_harbor(
         with (
             mock.patch.object(sys, "argv", argv),
             mock.patch.object(run_sweep, "preflight", return_value=0),
-            mock.patch.object(run_sweep, "child_env", return_value={}),
+            mock.patch.object(run_sweep, "child_env", return_value=child if judge_env else {}),
             # build_cmd forwards the system's key; supply a placeholder so the test does not
             # depend on a developer's .env (a clean checkout or CI has none).
             mock.patch.dict(run_sweep.os.environ, {"OPENAI_API_KEY": "placeholder"}),
@@ -322,29 +336,111 @@ def main() -> int:
                 (report.get("status"), report.get("graded")) == ("ok", False),
             )
 
-    print("\n== 8. --grade: graded follows the judges' coverage gate (their exit codes) ==")
-    # Exit 0: every trial scored or skipped by design. Exit 2: one could not be scored.
-    for label, reward, judge_rc, want in [
+    print("\n== 8. --grade: each judge's outcome and reason, and graded ==")
+    scored = {"n_scored": 1, "n_judge_errors": 0, "skipped": {}}
+
+    def skip(reason):
+        return {"n_scored": 0, "n_judge_errors": 0, "skipped": {reason: 1}}
+
+    def error(text):
+        return (2, {"n_scored": 0, "n_judge_errors": 1, "skipped": {}}, {"error": text})
+
+    cases = [
+        # label, judges, judge env set, want (process reason, policy reason), want graded
         (
             "both judges scored",
-            {"score": 1.0, "process_pct": 80.0, "policy_support_judged": 1},
-            0,
+            {"process": (0, scored, {}), "policy": (0, scored, {})},
+            True,
+            ("scored", "scored"),
             True,
         ),
         (
-            "policy-off: the policy judge skips by design",
-            {"score": 1.0, "process_pct": 80.0},
-            0,
+            "policy-off task",
+            {"process": (0, scored, {}), "policy": (0, skip("policy_off"), None)},
+            True,
+            ("scored", "policy_off"),
             True,
         ),
-        ("no report: both judges skip by design", {"score": 0.0, "report_present": 0}, 0, True),
-        ("a judge could not score it (e.g. no judge key)", {"score": 1.0}, 2, False),
-    ]:
+        (
+            "agent wrote no report",
+            {"process": (0, skip("no_report"), None), "policy": (0, skip("no_report"), None)},
+            True,
+            ("no_report", "no_report"),
+            True,
+        ),
+        (
+            "judge keys not set",
+            {},
+            False,
+            ("judge_credentials_missing", "judge_credentials_missing"),
+            False,
+        ),
+        (
+            "judge API rejected the key",
+            {
+                "process": error("AuthenticationError: Error code: 401 - invalid api key"),
+                "policy": error("PermissionDeniedError: Error code: 403 - key not allowed"),
+            },
+            True,
+            ("judge_credentials_rejected", "judge_credentials_rejected"),
+            False,
+        ),
+        # Mentions "401" and "api key" but is a rate limit: matched by exception type, not text.
+        (
+            "judge rate-limited",
+            {
+                "process": error(
+                    "RateLimitError: Error code: 429 - retry after 401ms; api key quota"
+                ),
+                "policy": (0, scored, {}),
+            },
+            True,
+            ("judge_error", "scored"),
+            False,
+        ),
+        (
+            "rubric bundle missing",
+            {"process": (2, skip("no_rubrics"), None), "policy": (0, scored, {})},
+            True,
+            ("no_rubrics", "scored"),
+            False,
+        ),
+        (
+            "judge script crashed",
+            {"process": (1, None, None), "policy": (0, scored, {})},
+            True,
+            ("judge_script_failed", "scored"),
+            False,
+        ),
+    ]
+    for label, judges, judge_env, want_reasons, want_graded in cases:
         rc, out = run_main_with_fake_harbor(
-            harbor_rc=0, stale=False, grade=True, reward=reward, judge_rc=judge_rc
+            harbor_rc=0, stale=False, grade=True, judges=judges, judge_env=judge_env
         )
-        got = json.loads(out).get("graded") if rc == 0 else None
-        check(f"{label} -> graded {want}", got is want, f"exit {rc}, graded {got!r}")
+        report = json.loads(out) if rc == 0 else {}
+        grading = report.get("grading") or {}
+        got = tuple((grading.get(j) or {}).get("reason") for j in ("process", "policy"))
+        check(f"{label}: reasons {want_reasons}", got == want_reasons, f"exit {rc}, {got}")
+        check(
+            f"{label}: graded {want_graded}",
+            report.get("graded") is want_graded,
+            str(report.get("graded")),
+        )
+    # An earlier run's summary says "scored", but this run's script failed: never report it scored.
+    rc, out = run_main_with_fake_harbor(
+        harbor_rc=0,
+        stale=False,
+        grade=True,
+        judges={"process": (2, scored, None), "policy": (0, scored, {})},
+    )
+    got = (json.loads(out)["grading"]["process"]["reason"], json.loads(out)["graded"])
+    check(
+        "stale 'scored' summary, script failed -> judge_script_failed",
+        got == ("judge_script_failed", False),
+        str(got),
+    )
+    rc, out = run_main_with_fake_harbor(harbor_rc=0, stale=False)
+    check("without --grade: grading is null", json.loads(out).get("grading", "absent") is None, out)
 
     print()
     if _fails:
