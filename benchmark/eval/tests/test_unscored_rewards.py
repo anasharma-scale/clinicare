@@ -12,10 +12,14 @@ clinicare_core.rewards; these checks pin that score_clinicare applies it.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import threading
+from pathlib import Path
 
 from clinicare_core import VERIFIER_FAILED_KEYS, verifier_failed, write_reward_atomic
 from clinicare_core.paths import bootstrap
@@ -106,6 +110,28 @@ def main() -> int:
         thread.join()
         check("reader saw no partial file across 300 rewrites", len(bad), 0)
         check("still no temp files", sorted(os.listdir(tmp)), ["reward.json"])
+
+    print("\n== benchmark/metric.py: unscored rewards stay out of the job means ==")
+    metric_py = Path(__file__).resolve().parents[2] / "metric.py"
+    spec = importlib.util.spec_from_file_location("job_metric", metric_py)
+    job_metric = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(job_metric)
+    check(
+        "VERIFIER_FAILED_KEYS matches clinicare_core",
+        job_metric.VERIFIER_FAILED_KEYS,
+        VERIFIER_FAILED_KEYS,
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        lines = [{"score": 1.0}, {"score": 0.0}, None]
+        lines += [{"score": 0.0, "judge_failed": 1, key: 1} for key in VERIFIER_FAILED_KEYS]
+        src, dst = Path(tmp, "rewards.jsonl"), Path(tmp, "metric.json")
+        src.write_text("\n".join("null" if r is None else json.dumps(r) for r in lines) + "\n")
+        subprocess.run([sys.executable, str(metric_py), "-i", str(src), "-o", str(dst)], check=True)
+        out = json.loads(dst.read_text())
+        check("n_trials counts every line", out["n_trials"], 3 + len(VERIFIER_FAILED_KEYS))
+        check("n_completed counts scored trials only", out["n_completed"], 2)
+        check("n_verifier_failed", out["n_verifier_failed"], len(VERIFIER_FAILED_KEYS))
+        check("mean_score over scored trials only", out["mean_score"], 0.5)
 
     print()
     if FAIL:

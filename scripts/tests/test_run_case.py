@@ -81,7 +81,12 @@ def make_trial(
 
 
 def run_main_with_fake_harbor(
-    *, harbor_rc: int, stale: bool, corrupt: str | None = None
+    *,
+    harbor_rc: int,
+    stale: bool,
+    corrupt: str | None = None,
+    grade: bool = False,
+    reward: dict | None = None,
 ) -> tuple[int, str]:
     """run_case.main() against a placeholder task, with preflight and harbor replaced by fakes."""
     task_id = "advanced-imaging-000001"
@@ -93,7 +98,13 @@ def run_main_with_fake_harbor(
         checksum = "stale" if stale else dirhash(tasks / task_id, "sha256")
         # The trial harbor would leave (or that an earlier run left) in the job dir.
         trial = make_trial(
-            jobs / "jn", task_id, rewards=True, reward_file=True, exc=None, checksum=checksum
+            jobs / "jn",
+            task_id,
+            rewards=True,
+            reward_file=True,
+            exc=None,
+            checksum=checksum,
+            reward=reward,
         )
         if corrupt:
             (trial / corrupt).write_text('{"score": 1.')
@@ -103,6 +114,7 @@ def run_main_with_fake_harbor(
 
         argv = ["run_case.py", "--system", "codex-gpt56sol", "--task-id", task_id]
         argv += ["--tasks", str(tasks), "--jobs-dir", str(jobs), "--job-name", "jn"]
+        argv += ["--grade"] if grade else []
         out, err = io.StringIO(), io.StringIO()
         with (
             mock.patch.object(sys, "argv", argv),
@@ -264,6 +276,11 @@ def main() -> int:
             'G_QUOTED_THEN_COMMENT="https://gw.example.com/v1"   # gateway\n'
             "H_EMPTY_THEN_COMMENT=   # leave blank\n"
             "I_SINGLE_THEN_COMMENT='abc'  # note\n"
+            'J_ESCAPED_QUOTE="pa\\"ss"\n'
+            'K_ESCAPED_BACKSLASH="a\\\\b"\n'
+            'L_OTHER_BACKSLASH="a\\nb"\n'
+            'M_ESCAPED_THEN_COMMENT="x\\"y"   # note\n'
+            "N_SINGLE_BACKSLASH='a\\b'\n"
         )
         env = load_env(Path(tmp))
         for key, want in [
@@ -276,6 +293,12 @@ def main() -> int:
             ("G_QUOTED_THEN_COMMENT", "https://gw.example.com/v1"),
             ("H_EMPTY_THEN_COMMENT", ""),
             ("I_SINGLE_THEN_COMMENT", "abc"),
+            # Expected values are what bash's `set -a; source .env` produced for these lines.
+            ("J_ESCAPED_QUOTE", 'pa"ss'),
+            ("K_ESCAPED_BACKSLASH", "a\\b"),
+            ("L_OTHER_BACKSLASH", "a\\nb"),
+            ("M_ESCAPED_THEN_COMMENT", 'x"y'),
+            ("N_SINGLE_BACKSLASH", "a\\b"),
         ]:
             check(f"{key} == {want!r}", env.get(key) == want, repr(env.get(key)))
 
@@ -296,6 +319,21 @@ def main() -> int:
                 "fresh trial: status ok, not graded",
                 (report.get("status"), report.get("graded")) == ("ok", False),
             )
+
+    print("\n== 8. --grade: graded only when both judges' scores reach reward.json ==")
+    # The judge scripts are faked to exit 0, as they do when they skip a trial without scoring it.
+    for label, reward, want in [
+        ("no report: both judges skip", {"score": 0.0, "report_present": 0}, False),
+        ("only the process judge scored", {"score": 1.0, "process_pct": 80.0}, False),
+        (
+            "both judges scored",
+            {"score": 1.0, "process_pct": 80.0, "policy_support_judged": 1},
+            True,
+        ),
+    ]:
+        rc, out = run_main_with_fake_harbor(harbor_rc=0, stale=False, grade=True, reward=reward)
+        got = json.loads(out).get("graded") if rc == 0 else None
+        check(f"{label} -> graded {want}", got is want, f"exit {rc}, graded {got!r}")
 
     print()
     if _fails:
