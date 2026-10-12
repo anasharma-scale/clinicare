@@ -349,10 +349,10 @@ def main() -> int:
     print("\n== 8. --grade: each judge's outcome and reason, and graded ==")
     scored = {"n_scored": 1, "n_judge_errors": 0, "skipped": {}}
 
-    def skip(reason):
+    def skip(reason: str) -> dict:
         return {"n_scored": 0, "n_judge_errors": 0, "skipped": {reason: 1}}
 
-    def error(text):
+    def error(text: str) -> tuple[int, dict, dict]:
         return (2, {"n_scored": 0, "n_judge_errors": 1, "skipped": {}}, {"error": text})
 
     cases = [
