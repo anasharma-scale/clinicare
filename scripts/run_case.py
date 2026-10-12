@@ -19,8 +19,9 @@ Output contract — exit 0 and one JSON object on stdout whenever a trial dir ex
     task_id         the task id (from the trial's task path, not its truncated dir name)
     model_name      config.agent.model_name of the trial      agent_name  config.agent.name
     agent_version   agent_info.version                         exception_type  or null
-    graded          whether --grade left both judges' scores in reward.json (false without --grade,
-                    and false when a judge skipped the trial, e.g. no report)
+    graded          whether --grade ran and both judges finished: each one scored the trial or skipped
+                    it by design (no report, no rubrics, policy-off task). False without --grade, and
+                    false when a judge could not score it (judge error, missing judge credentials)
 Exit 2 with a message on stderr when there is no trustworthy trial to report: a usage/preflight
 error (nothing ran), harbor refusing the job (e.g. the job dir exists with different settings), a
 trial whose result.json or reward.json cannot be parsed, or a finished trial in the job dir that
@@ -44,7 +45,7 @@ from dirhash import dirhash  # harbor's own task checksum (Task.checksum == dirh
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import run_sweep
-from clinicare_core import graded, load_env, verifier_failed
+from clinicare_core import load_env, verifier_failed
 
 BASE = run_sweep.BASE
 EXIT_USAGE = 2
@@ -106,12 +107,15 @@ def log_tail(log: Path, lines: int = 5) -> str:
         return "(no log)"
 
 
-def grade(job_dir: Path, trial_dir: Path, env: dict[str, str]) -> bool:
+def grade(job_dir: Path, env: dict[str, str]) -> bool:
     """Add the LLM-judged scores (process_pct, policy_citation_support_rate) to reward.json.
 
-    grade.py writes side files only; these two scripts are what amend reward.json. Both exit 0
-    when they skip a trial (no report, no rubrics) without scoring it, so the result is whether
-    the reward now carries both judges' keys, not just whether the scripts succeeded.
+    grade.py writes side files only; these two scripts are what amend reward.json. Each has a
+    coverage gate: exit 0 means every trial was scored or skipped by design (BENIGN_REASONS in
+    process.py: no report, no rubrics, policy-off), exit 2 means one could not be scored for a
+    fixable reason (FAILURE_REASONS: judge error, unreadable rubrics). So a clean exit from both is
+    the right test. Checking reward.json for both judges' keys instead would mark every trial a
+    judge correctly skips as ungraded.
     """
     codes = [
         subprocess.run(
@@ -122,12 +126,7 @@ def grade(job_dir: Path, trial_dir: Path, env: dict[str, str]) -> bool:
         ).returncode
         for script in ("process.py", "policy_support.py")
     ]
-    if any(code != 0 for code in codes):
-        return False
-    try:
-        return graded(_read_json(trial_dir / "verifier" / "reward.json"))
-    except UnreadableTrial:
-        return False
+    return all(code == 0 for code in codes)
 
 
 def main() -> int:
@@ -205,9 +204,7 @@ def main() -> int:
             f"the trial in {job_dir} was built from a different version of task {args.task_id} "
             "(task checksum differs); use a new --job-name, or delete that job dir to re-run"
         )
-    report["graded"] = bool(
-        args.grade and report["status"] != "dead" and grade(job_dir, Path(report["trial_dir"]), env)
-    )
+    report["graded"] = bool(args.grade and report["status"] != "dead" and grade(job_dir, env))
     print(json.dumps(report))
     return 0
 

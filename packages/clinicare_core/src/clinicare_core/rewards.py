@@ -36,17 +36,6 @@ def verifier_failed(reward: Mapping[str, object]) -> bool:
     return any(reward.get(key) == 1 for key in VERIFIER_FAILED_KEYS)
 
 
-# Keys the two post-hoc judges add to reward.json on success (benchmark/eval/metrics/process.py
-# and policy_support.py --amend-reward). A judge that skips a trial (no report, no rubrics) exits 0
-# without adding its key, so a clean exit alone does not mean the trial was graded.
-GRADED_KEYS = ("process_pct", "policy_support_judged")
-
-
-def graded(reward: Mapping[str, object]) -> bool:
-    """Whether both LLM judges have written their scores into this reward."""
-    return all(key in reward for key in GRADED_KEYS)
-
-
 def write_reward_atomic(path: Path | str, reward: Mapping[str, object]) -> None:
     """Replace `path` with `reward` as JSON so concurrent readers see the old file or the new one.
 

@@ -87,6 +87,7 @@ def run_main_with_fake_harbor(
     corrupt: str | None = None,
     grade: bool = False,
     reward: dict | None = None,
+    judge_rc: int = 0,
 ) -> tuple[int, str]:
     """run_case.main() against a placeholder task, with preflight and harbor replaced by fakes."""
     task_id = "advanced-imaging-000001"
@@ -110,7 +111,8 @@ def run_main_with_fake_harbor(
             (trial / corrupt).write_text('{"score": 1.')
 
         def fake_run(cmd, **kwargs):
-            return subprocess.CompletedProcess(cmd, harbor_rc)
+            judge = any("benchmark/eval/metrics/" in str(part) for part in cmd)
+            return subprocess.CompletedProcess(cmd, judge_rc if judge else harbor_rc)
 
         argv = ["run_case.py", "--system", "codex-gpt56sol", "--task-id", task_id]
         argv += ["--tasks", str(tasks), "--jobs-dir", str(jobs), "--job-name", "jn"]
@@ -320,18 +322,27 @@ def main() -> int:
                 (report.get("status"), report.get("graded")) == ("ok", False),
             )
 
-    print("\n== 8. --grade: graded only when both judges' scores reach reward.json ==")
-    # The judge scripts are faked to exit 0, as they do when they skip a trial without scoring it.
-    for label, reward, want in [
-        ("no report: both judges skip", {"score": 0.0, "report_present": 0}, False),
-        ("only the process judge scored", {"score": 1.0, "process_pct": 80.0}, False),
+    print("\n== 8. --grade: graded follows the judges' coverage gate (their exit codes) ==")
+    # Exit 0: every trial scored or skipped by design. Exit 2: one could not be scored.
+    for label, reward, judge_rc, want in [
         (
             "both judges scored",
             {"score": 1.0, "process_pct": 80.0, "policy_support_judged": 1},
+            0,
             True,
         ),
+        (
+            "policy-off: the policy judge skips by design",
+            {"score": 1.0, "process_pct": 80.0},
+            0,
+            True,
+        ),
+        ("no report: both judges skip by design", {"score": 0.0, "report_present": 0}, 0, True),
+        ("a judge could not score it (e.g. no judge key)", {"score": 1.0}, 2, False),
     ]:
-        rc, out = run_main_with_fake_harbor(harbor_rc=0, stale=False, grade=True, reward=reward)
+        rc, out = run_main_with_fake_harbor(
+            harbor_rc=0, stale=False, grade=True, reward=reward, judge_rc=judge_rc
+        )
         got = json.loads(out).get("graded") if rc == 0 else None
         check(f"{label} -> graded {want}", got is want, f"exit {rc}, graded {got!r}")
 
