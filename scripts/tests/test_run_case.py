@@ -92,10 +92,14 @@ def run_main_with_fake_harbor(
     judges: dict | None = None,
     judge_env: bool = True,
     old_summaries: dict | None = None,
+    backdate: bool = False,
 ) -> tuple[int, str]:
-    """`judges` fakes each judge script as {"process"|"policy": (exit code, summary, trial record)}:
-    the summary and record are what that script writes to the job dir and the trial dir."""
-    """run_case.main() against a placeholder task, with preflight and harbor replaced by fakes."""
+    """run_case.main() against a placeholder task, with preflight and harbor replaced by fakes.
+
+    `judges` fakes each judge script as {"process"|"policy": (exit code, summary, trial record)}:
+    the summary and record are what that script writes to the job dir and the trial dir.
+    `backdate` stamps each new summary with a time before this run, as a skewed NFS clock would.
+    """
     task_id = "advanced-imaging-000001"
     with tempfile.TemporaryDirectory() as tmp:
         tasks = Path(tmp, "tasks")
@@ -132,6 +136,9 @@ def run_main_with_fake_harbor(
             code, summary, record = (judges or {}).get(name, (0, None, None))
             if summary is not None:
                 (jobs / "jn" / summary_file).write_text(json.dumps(summary))
+                if backdate:
+                    past = time.time() - 1800
+                    os.utime(jobs / "jn" / summary_file, (past, past))
             if record is not None:
                 (trial / "verifier" / trial_file).write_text(json.dumps(record))
             return subprocess.CompletedProcess(cmd, code)
@@ -461,6 +468,17 @@ def main() -> int:
     )
     got = json.loads(out)["grading"]["policy"]["reason"]
     check("old run's summary, no new one -> judge_script_failed", got == "judge_script_failed", got)
+    # The summary is rewritten, but the file server's clock is behind ours: it still counts.
+    rc, out = run_main_with_fake_harbor(
+        harbor_rc=0,
+        stale=False,
+        grade=True,
+        judges={"process": (0, scored, {}), "policy": (0, scored, {})},
+        old_summaries={"process": (rejected, {}), "policy": (rejected, {})},
+        backdate=True,
+    )
+    got = (json.loads(out)["grading"]["process"]["outcome"], json.loads(out)["graded"])
+    check("rewritten summary with a lagging mtime -> scored", got == ("scored", True), str(got))
     rc, out = run_main_with_fake_harbor(harbor_rc=0, stale=False)
     check("without --grade: grading is null", json.loads(out).get("grading", "absent") is None, out)
 
